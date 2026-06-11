@@ -80,6 +80,53 @@
   --glass-refraction: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.05) 100%);
 }
 
+/* Claude 风格主题 */
+.claude {
+  /* 极简·石墨 (灰白对比，高对比线条) */
+  --color-bg: #f5f6f7; /* 极简浅灰背景 */
+  --color-surface: #ffffff; /* 纯白卡片 */
+  --color-surface-hover: #f0f0f0;
+  --color-border: rgba(15, 23, 42, 0.12); /* 深色边框，强调线条 */
+  --color-border-subtle: rgba(15, 23, 42, 0.06);
+  --color-text: #0b0b0b; /* 高对比正文 */
+  --color-text-secondary: #6b6b6b;
+
+  --color-primary: #0b1722; /* 石墨近黑作为主色 */
+  --color-primary-hover: #374151; /* 深灰 hover */
+  --color-primary-light: rgba(11, 23, 34, 0.06);
+
+  --color-success: #16a34a;
+  --color-success-light: rgba(22,163,74,0.06);
+
+  --color-error: #dc2626;
+  --color-error-light: rgba(220,38,38,0.06);
+
+  --color-warning: #b45309;
+  --color-warning-light: rgba(180,83,9,0.06);
+
+  --color-blue: #111827;
+  --color-blue-light: rgba(17,24,39,0.06);
+
+  --color-purple: #6b7280;
+  --color-purple-light: rgba(107,114,128,0.06);
+
+  --glass-blur: 8px;
+  --glass-saturate: 120%;
+  --glass-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  --glass-shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.08);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  --glass-border: 1px solid rgba(15,23,42,0.06);
+  --glass-refraction: linear-gradient(135deg, rgba(11,17,34,0.02) 0%, rgba(11,17,34,0) 50%);
+}
+
+.claude .card-glass::before {
+  background: linear-gradient(135deg, rgba(11,17,34,0.04) 0%, rgba(11,17,34,0.02) 50%, rgba(255,255,255,0.02) 100%);
+}
+
+.claude .btn-glass::before {
+  background: linear-gradient(135deg, rgba(11,17,34,0.06) 0%, rgba(255,255,255,0.02) 100%);
+}
+
 * {
   box-sizing: border-box;
 }

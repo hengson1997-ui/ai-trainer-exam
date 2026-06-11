@@ -10,6 +10,10 @@ const THEMES = {
     name: '深色模式',
     icon: '🌙',
   },
+  claude: {
+    name: 'Claude 风格',
+    icon: '🌀',
+  },
   system: {
     name: '跟随系统',
     icon: '💻',
@@ -26,7 +30,9 @@ export default function ThemeToggle() {
 
   const applyTheme = (newTheme) => {
     const root = document.documentElement;
-    
+    // 清理自定义样式类，再根据选择添加
+    root.classList.toggle('claude', newTheme === 'claude');
+
     if (newTheme === 'system') {
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       root.classList.toggle('dark', isDark);

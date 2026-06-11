@@ -122,7 +122,7 @@ export default function PracticePage({ initialCategory = null, initialType = nul
 
     setQuestions(filtered);
     setTimer(0);
-    setIsTimerRunning(false);
+    setIsTimerRunning(true);
     questionStartTime.current = Date.now();
     
     // 恢复之前的答题状态
@@ -169,6 +169,7 @@ export default function PracticePage({ initialCategory = null, initialType = nul
     if (currentIdx < questions.length - 1) {
       const nextIdx = currentIdx + 1;
       setCurrentQuestionIndex(nextIdx);
+      questionStartTime.current = Date.now();
       // 确保下一题可见
       if (nextIdx >= visibleCount) {
         setVisibleCount(prev => Math.max(prev, nextIdx + 2));
