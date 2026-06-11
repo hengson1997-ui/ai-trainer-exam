@@ -15,7 +15,7 @@ export default function QuestionCard({
   const [selectedAnswer, setSelectedAnswer] = useState(userAnswer || '');
 
   useEffect(() => {
-    setSelectedAnswer(userAnswer || '');
+    setSelectedAnswer((userAnswer || '').split('').sort().join(''));
   }, [question.id, userAnswer]);
 
   const handleOptionClick = (optionLetter) => {
@@ -211,7 +211,7 @@ export default function QuestionCard({
 
         {/* Submit button */}
         {!showResult && (
-          <div className={`${compact ? 'mt-3' : 'mt-6'} flex justify-end`}>
+          <div className={`${compact ? 'mt-3' : 'mt-6'} flex justify-start`}>
             <button
               onClick={handleSubmit}
               disabled={!selectedAnswer}

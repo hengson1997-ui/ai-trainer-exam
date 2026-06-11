@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import QuestionCard from '../components/QuestionCard';
 import ProgressBar from '../components/ProgressBar';
 import Timer from '../components/Timer';
-import { getQuestionsByType, shuffleOptions, getStatistics, getCategories } from '../utils/questions';
+import { getQuestionsByType, shuffleOptions, getStatistics, getCategories, checkAnswer } from '../utils/questions';
 import { getProgress, saveProgress, saveWrongQuestion, removeWrongQuestion } from '../utils/storage';
 
 // 默认考试配置
@@ -86,7 +86,7 @@ export default function ExamPage({ onNavigate }) {
     const question = questions.find(q => q.id === questionId);
     if (!question) return;
 
-    const correct = question.answer === answer;
+    const correct = checkAnswer(question, answer);
     setShowResult(true);
 
     if (correct) {
@@ -142,7 +142,7 @@ export default function ExamPage({ onNavigate }) {
   const finishExam = () => {
     const answeredQuestions = questions.map(q => ({
       ...q,
-      isCorrect: answers[q.id] === q.answer,
+      isCorrect: checkAnswer(q, answers[q.id]),
     }));
 
     // 按题型计算得分
@@ -697,7 +697,7 @@ export default function ExamPage({ onNavigate }) {
             }}
             showResult={showResult || isReview}
             userAnswer={isReview ? question.answer : answers[question.id]}
-            isCorrect={isReview ? question.isCorrect : (answers[question.id] === question.answer)}
+            isCorrect={isReview ? question.isCorrect : checkAnswer(question, answers[question.id])}
           />
         )}
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import QuestionCard from '../components/QuestionCard';
-import { getCategories, getQuestionsByCategory, shuffleOptions } from '../utils/questions';
+import { getCategories, getQuestionsByCategory, shuffleOptions, checkAnswer } from '../utils/questions';
 import { getProgress, saveProgress, saveWrongQuestion, removeWrongQuestion, getSettings, savePracticeProgress, getPracticeProgress, savePracticeAnswers, getPracticeAnswers, clearPracticeAnswers, getFavorites, addFavorite, removeFavorite, isFavorite, saveQuestionStats, getWeakCategories } from '../utils/storage';
 
 export default function PracticePage({ initialCategory = null, initialType = null, onStatsUpdate = null }) {
@@ -154,7 +154,7 @@ export default function PracticePage({ initialCategory = null, initialType = nul
     const question = questions.find(q => q.id === questionId);
     if (!question) return;
 
-    const correct = question.answer === answer;
+    const correct = checkAnswer(question, answer);
     const timeSpent = Math.round((Date.now() - questionStartTime.current) / 1000);
     
     const newAnswers = { ...answers, [questionId]: answer };

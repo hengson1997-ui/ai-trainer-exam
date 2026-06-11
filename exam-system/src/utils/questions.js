@@ -86,7 +86,7 @@ export function shuffleOptions(question) {
     // Find where this option ended up in the shuffled array
     const newIdx = shuffled.findIndex(opt => opt.text === originalOpt.text);
     return newIdx >= 0 ? newLetters[newIdx] : letter;
-  }).join('');
+  }).sort().join('');
 
   return {
     ...question,
@@ -97,11 +97,12 @@ export function shuffleOptions(question) {
 
 // Check answer
 export function checkAnswer(question, userAnswer) {
-  return question.answer === userAnswer;
+  return parseAnswer(question.answer) === parseAnswer(userAnswer);
 }
 
 // Parse answer for multi-select
 export function parseAnswer(answer) {
+  if (!answer || typeof answer !== 'string') return '';
   return answer.split('').sort().join('');
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import QuestionCard from '../components/QuestionCard';
 import { getWrongQuestions, removeWrongQuestion, clearWrongQuestions, getProgress, saveProgress } from '../utils/storage';
-import { getCategories } from '../utils/questions';
+import { getCategories, checkAnswer } from '../utils/questions';
 
 export default function WrongBookPage() {
   const [wrongQuestions, setWrongQuestions] = useState([]);
@@ -98,7 +98,7 @@ export default function WrongBookPage() {
     const question = filteredQuestions.find(q => q.id === questionId);
     if (!question) return;
 
-    const correct = question.answer === answer;
+    const correct = checkAnswer(question, answer);
     setUserAnswer(answer);
     setIsCorrect(correct);
     setShowResult(true);
