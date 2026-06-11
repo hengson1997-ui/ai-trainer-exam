@@ -1,3 +1,5 @@
+import { parseAnswer } from './questions';
+
 // LocalStorage utility functions
 const STORAGE_KEYS = {
   PROGRESS: 'exam_progress',
@@ -61,15 +63,21 @@ export function getProgress() {
 export function saveWrongQuestion(question) {
   const wrongQuestions = getWrongQuestions();
   const exists = wrongQuestions.find(q => q.id === question.id);
+  const normalizedQuestion = {
+    ...question,
+    answer: parseAnswer(question.answer),
+  };
+
   if (!exists) {
     wrongQuestions.push({
-      ...question,
+      ...normalizedQuestion,
       wrongCount: 1,
       lastWrongTime: new Date().toISOString(),
     });
   } else {
     exists.wrongCount += 1;
     exists.lastWrongTime = new Date().toISOString();
+    exists.answer = normalizedQuestion.answer;
   }
   return setItem(STORAGE_KEYS.WRONG_QUESTIONS, wrongQuestions);
 }
@@ -83,7 +91,11 @@ export function removeWrongQuestion(questionId) {
 
 // Get wrong questions
 export function getWrongQuestions() {
-  return getItem(STORAGE_KEYS.WRONG_QUESTIONS, []);
+  const questions = getItem(STORAGE_KEYS.WRONG_QUESTIONS, []);
+  return questions.map(q => ({
+    ...q,
+    answer: q.answer ? parseAnswer(q.answer) : q.answer,
+  }));
 }
 
 // Save settings
