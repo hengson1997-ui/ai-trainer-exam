@@ -59,10 +59,16 @@ while i < len(lines):
             j += 1
         
         if question_text and answer:
+            # 根据答案判断题型：多选答案包含多个字母
+            if len(answer) > 1 and all(c in 'ABCDEF' for c in answer):
+                question_type = '多选题'
+            else:
+                question_type = current_type
+            
             questions.append({
                 'id': len(questions) + 1,
                 'category': current_category,
-                'type': current_type,
+                'type': question_type,
                 'question': question_text,
                 'options': options,
                 'answer': answer,

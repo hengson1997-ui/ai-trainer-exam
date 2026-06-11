@@ -9,6 +9,8 @@ export default function QuestionCard({
   userAnswer = null,
   isCorrect = null,
   compact = false,
+  isFavorite = false,
+  onToggleFavorite = null,
 }) {
   const [selectedAnswer, setSelectedAnswer] = useState(userAnswer || '');
 
@@ -40,21 +42,22 @@ export default function QuestionCard({
 
   const getOptionStyle = (letter) => {
     if (!showResult) {
-      return selectedAnswer.includes(letter)
-        ? 'btn-glass text-primary'
-        : 'btn-glass text-secondary hover:text-primary';
+      if (selectedAnswer.includes(letter)) {
+        return 'bg-primary-light border border-primary text-primary shadow-lg';
+      }
+      return 'btn-glass text-secondary hover:text-primary hover:border-primary';
     }
 
     const isCorrectOption = question.answer.includes(letter);
     const isSelected = selectedAnswer.includes(letter);
 
     if (isCorrectOption) {
-      return 'bg-success-light border border-success text-success';
+      return 'bg-success-light border border-success text-success shadow-lg';
     }
     if (isSelected && !isCorrectOption) {
-      return 'bg-error-light border border-error text-error';
+      return 'bg-error-light border border-error text-error shadow-lg';
     }
-    return 'glass opacity-60';
+    return 'glass opacity-50';
   };
 
   const getOptionIcon = (letter) => {
@@ -92,11 +95,33 @@ export default function QuestionCard({
             </span>
             <span className="text-xs text-secondary">{question.category}</span>
           </div>
-          {showResult && (
-            <span className={`tag-glass ${isCorrect ? 'text-success' : 'text-error'}`}>
-              {isCorrect ? '✓ 正确' : '✗ 错误'}
-            </span>
-          )}
+          <div className="flex items-center space-x-2">
+            {showResult && (
+              <span className={`tag-glass ${isCorrect ? 'text-success' : 'text-error'}`}>
+                {isCorrect ? '✓ 正确' : '✗ 错误'}
+              </span>
+            )}
+            {/* 收藏按钮 - 在header内，与其他元素排列 */}
+            {onToggleFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(question.id);
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
+                  isFavorite 
+                    ? 'text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                style={{
+                  background: isFavorite ? '#4a7c59' : '#5a5a5a',
+                }}
+                title={isFavorite ? '取消收藏' : '收藏'}
+              >
+                {isFavorite ? '★ 已收藏' : '☆ 收藏'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -115,7 +140,7 @@ export default function QuestionCard({
                 key={letter}
                 onClick={() => handleOptionClick(letter)}
                 disabled={showResult}
-                className={`w-full rounded-2xl text-left transition-all duration-300 ${getOptionStyle(letter)} ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
+                className={`w-full rounded-2xl text-left transition-all duration-300 ${getOptionStyle(letter)} ${compact ? 'px-3 py-2' : 'px-4 py-3'} hover:scale-[1.01] active:scale-[0.99]`}
               >
                 <span className={compact ? 'text-sm' : 'font-medium'}>{option}</span>
                 {getOptionIcon(letter)}
@@ -129,22 +154,22 @@ export default function QuestionCard({
               <button
                 onClick={() => handleOptionClick('√')}
                 disabled={showResult}
-                className={`flex-1 rounded-2xl text-center font-medium transition-all duration-300 ${
+                className={`flex-1 rounded-2xl text-center font-medium transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] ${
                   selectedAnswer === '√'
-                    ? 'btn-glass text-success'
+                    ? 'btn-glass text-success border-success shadow-lg'
                     : 'btn-glass text-secondary hover:text-success'
-                } ${showResult && question.answer === '√' ? 'bg-success-light text-success' : ''} ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
+                } ${showResult && question.answer === '√' ? 'bg-success-light text-success shadow-lg' : ''} ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
               >
                 ✓ 正确
               </button>
               <button
                 onClick={() => handleOptionClick('×')}
                 disabled={showResult}
-                className={`flex-1 rounded-2xl text-center font-medium transition-all duration-300 ${
+                className={`flex-1 rounded-2xl text-center font-medium transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] ${
                   selectedAnswer === '×'
-                    ? 'btn-glass text-error'
+                    ? 'btn-glass text-error border-error shadow-lg'
                     : 'btn-glass text-secondary hover:text-error'
-                } ${showResult && question.answer === '×' ? 'bg-error-light text-error' : ''} ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
+                } ${showResult && question.answer === '×' ? 'bg-error-light text-error shadow-lg' : ''} ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
               >
                 ✗ 错误
               </button>
@@ -156,8 +181,8 @@ export default function QuestionCard({
         {showResult && (
           <div className={`${compact ? 'mt-3 p-3' : 'mt-6 p-4'} rounded-2xl ${
             isCorrect 
-              ? 'bg-success-light border border-success' 
-              : 'bg-error-light border border-error'
+              ? 'bg-success-light border border-success shadow-lg' 
+              : 'bg-error-light border border-error shadow-lg'
           }`}>
             <div className="flex items-center">
               {!compact && (
@@ -171,10 +196,14 @@ export default function QuestionCard({
                 </span>
               )}
             </div>
-            {question.explanation && (
+            {question.explanation ? (
               <p className={`${compact ? 'text-xs mt-1' : 'text-sm mt-2'} text-secondary`}>
                 <span className="font-medium">解析：</span>
                 {question.explanation}
+              </p>
+            ) : (
+              <p className={`${compact ? 'text-xs mt-1' : 'text-sm mt-2'} text-secondary opacity-60`}>
+                <span className="font-medium">解析：</span>暂无解析
               </p>
             )}
           </div>

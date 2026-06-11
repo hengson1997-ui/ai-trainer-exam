@@ -32,22 +32,22 @@ export default function StatsPage() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-surface rounded-xl border border-theme p-6">
-          <div className="text-sm text-secondary mb-1">总题目数</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">总题目数</div>
           <div className="text-3xl font-semibold text-primary">{totalQuestions}</div>
         </div>
-        <div className="bg-surface rounded-xl border border-theme p-6">
-          <div className="text-sm text-secondary mb-1">已作答</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">已作答</div>
           <div className="text-3xl font-semibold text-primary">{stats.total}</div>
           <div className="text-xs text-secondary mt-1">完成率 {completionRate}%</div>
         </div>
-        <div className="bg-surface rounded-xl border border-theme p-6">
-          <div className="text-sm text-secondary mb-1">正确率</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">正确率</div>
           <div className="text-3xl font-semibold text-success">{accuracy}%</div>
           <div className="text-xs text-secondary mt-1">{stats.correct} 道正确</div>
         </div>
-        <div className="bg-surface rounded-xl border border-theme p-6">
-          <div className="text-sm text-secondary mb-1">错题数</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">错题数</div>
           <div className="text-3xl font-semibold text-error">{wrongQuestions.length}</div>
           <div className="text-xs text-secondary mt-1">需要加强</div>
         </div>
@@ -55,7 +55,7 @@ export default function StatsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category Progress */}
-        <div className="bg-surface rounded-xl border border-theme p-6">
+        <div className="card-glass p-6">
           <h2 className="text-lg font-semibold text-primary mb-4">各章节进度</h2>
           <div className="space-y-4">
             {categories.map(cat => {
@@ -86,7 +86,7 @@ export default function StatsPage() {
         </div>
 
         {/* Weak Areas */}
-        <div className="bg-surface rounded-xl border border-theme p-6">
+        <div className="card-glass p-6">
           <h2 className="text-lg font-semibold text-primary mb-4">薄弱环节</h2>
           
           {wrongQuestions.length > 0 ? (

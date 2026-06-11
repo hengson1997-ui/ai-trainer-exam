@@ -258,23 +258,23 @@ export default function ExamPage({ onNavigate }) {
           <div className="flex flex-wrap gap-3 mb-6">
             <button
               onClick={() => setConfig({ 判断题: { count: 40, score: 0.5 }, 单选题: { count: 140, score: 0.5 }, 多选题: { count: 10, score: 1 }, duration: 90 })}
-              className="btn-glass px-4 py-3 text-left rounded-xl"
+              className="btn-glass px-5 py-4 text-left rounded-2xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group"
             >
-              <div className="font-medium text-primary">📋 正式考试</div>
+              <div className="font-medium text-primary group-hover:text-primary-hover">📋 正式考试</div>
               <div className="text-xs text-secondary mt-1">190题 · 90分钟 · 100分</div>
             </button>
             <button
               onClick={() => setConfig({ 判断题: { count: 10, score: 0.5 }, 单选题: { count: 20, score: 0.5 }, 多选题: { count: 5, score: 1 }, duration: 30 })}
-              className="btn-glass px-4 py-3 text-left rounded-xl"
+              className="btn-glass px-5 py-4 text-left rounded-2xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group"
             >
-              <div className="font-medium text-primary">⚡ 快速练习</div>
+              <div className="font-medium text-primary group-hover:text-primary-hover">⚡ 快速练习</div>
               <div className="text-xs text-secondary mt-1">35题 · 30分钟</div>
             </button>
             <button
               onClick={() => setConfig({ 判断题: { count: 5, score: 0.5 }, 单选题: { count: 10, score: 0.5 }, 多选题: { count: 2, score: 1 }, duration: 15 })}
-              className="btn-glass px-4 py-3 text-left rounded-xl"
+              className="btn-glass px-5 py-4 text-left rounded-2xl hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group"
             >
-              <div className="font-medium text-primary">🎯 碎片练习</div>
+              <div className="font-medium text-primary group-hover:text-primary-hover">🎯 碎片练习</div>
               <div className="text-xs text-secondary mt-1">17题 · 15分钟</div>
             </button>
           </div>
@@ -448,7 +448,7 @@ export default function ExamPage({ onNavigate }) {
         <button
           onClick={startExam}
           disabled={totalQuestions === 0}
-          className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all duration-300 ${
+          className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-[1.01] ${
             totalQuestions > 0
               ? 'btn-primary'
               : 'glass text-secondary opacity-50 cursor-not-allowed'

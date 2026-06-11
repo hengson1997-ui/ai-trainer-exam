@@ -26,20 +26,20 @@ export default function HomePage({ onNavigate }) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="card-glass p-6">
-          <div className="text-sm text-secondary mb-1">总题目数</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">总题目数</div>
           <div className="text-3xl font-semibold text-primary">{totalQuestions}</div>
         </div>
-        <div className="card-glass p-6">
-          <div className="text-sm text-secondary mb-1">已作答</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">已作答</div>
           <div className="text-3xl font-semibold text-primary">{progress.totalAnswered}</div>
         </div>
-        <div className="card-glass p-6">
-          <div className="text-sm text-secondary mb-1">正确率</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">正确率</div>
           <div className="text-3xl font-semibold text-success">{accuracy}%</div>
         </div>
-        <div className="card-glass p-6">
-          <div className="text-sm text-secondary mb-1">错题数</div>
+        <div className="card-glass p-6 hover:scale-[1.02] transition-transform">
+          <div className="text-sm text-secondary mb-2">错题数</div>
           <div className="text-3xl font-semibold text-error">{wrongQuestions.length}</div>
         </div>
       </div>
@@ -48,28 +48,25 @@ export default function HomePage({ onNavigate }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <button
           onClick={() => onNavigate('practice')}
-          className="card-glass p-6 text-left transition-all duration-300 hover:scale-[1.02]"
-          style={{borderLeft: '4px solid var(--color-primary)'}}
+          className="card-glass p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
         >
-          <div className="text-3xl mb-3">📝</div>
+          <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">📝</div>
           <div className="text-lg font-medium text-primary">开始练习</div>
           <div className="text-sm text-secondary mt-1">按章节分类练习</div>
         </button>
         <button
           onClick={() => onNavigate('exam')}
-          className="card-glass p-6 text-left transition-all duration-300 hover:scale-[1.02]"
-          style={{borderLeft: '4px solid var(--color-blue)'}}
+          className="card-glass p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
         >
-          <div className="text-3xl mb-3">📋</div>
+          <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">📋</div>
           <div className="text-lg font-medium text-primary">模拟考试</div>
           <div className="text-sm text-secondary mt-1">自定义题目数量</div>
         </button>
         <button
           onClick={() => onNavigate('wrong')}
-          className="card-glass p-6 text-left transition-all duration-300 hover:scale-[1.02]"
-          style={{borderLeft: '4px solid var(--color-error)'}}
+          className="card-glass p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
         >
-          <div className="text-3xl mb-3">❌</div>
+          <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">❌</div>
           <div className="text-lg font-medium text-primary">错题本</div>
           <div className="text-sm text-secondary mt-1">{wrongQuestions.length} 道错题</div>
         </button>

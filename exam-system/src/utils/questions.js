@@ -76,11 +76,16 @@ export function shuffleOptions(question) {
   const newLetters = ['A', 'B', 'C', 'D', 'E'];
   const newOptions = shuffled.map((opt, idx) => `${newLetters[idx]}. ${opt.text}`);
 
-  // Find new answer
+  // Find new answer - map original letter to new position in shuffled array
   const oldAnswer = question.answer;
   const newAnswer = oldAnswer.split('').map(letter => {
-    const idx = optionPairs.findIndex(opt => opt.letter === letter);
-    return idx >= 0 ? newLetters[idx] : letter;
+    // Find the original option with this letter
+    const originalOpt = optionPairs.find(opt => opt.letter === letter);
+    if (!originalOpt) return letter;
+    
+    // Find where this option ended up in the shuffled array
+    const newIdx = shuffled.findIndex(opt => opt.text === originalOpt.text);
+    return newIdx >= 0 ? newLetters[newIdx] : letter;
   }).join('');
 
   return {

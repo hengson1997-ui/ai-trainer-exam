@@ -8,9 +8,26 @@ const navItems = [
   { id: 'stats', label: '统计', icon: '📊' },
 ];
 
-export default function Navbar({ currentPage, onNavigate }) {
+export default function Navbar({ currentPage, onNavigate, practiceStats = null }) {
+  // 格式化时间显示
+  const formatTimeShort = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+  };
+
+  // 格式化总时长（小时+分钟）
+  const formatTimeTotal = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
   return (
-    <nav className="glass-strong sticky top-0 z-50" style={{borderRadius: 0}}>
+    <nav className="glass-strong fixed top-0 left-0 right-0 z-50" style={{borderRadius: 0}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -22,6 +39,28 @@ export default function Navbar({ currentPage, onNavigate }) {
               人工智能训练师三级
             </span>
           </div>
+
+          {/* 练习模式统计信息 - 胶囊按钮样式 */}
+          {currentPage === 'practice' && practiceStats && (
+            <div className="hidden md:flex items-center gap-2">
+              <div className="px-3 py-1 rounded-full text-xs" style={{background: '#3a3a3a'}}>
+                <span className="text-gray-400">时长</span>
+                <span className="text-white ml-1 font-medium">{formatTimeShort(practiceStats.currentSessionTime)}</span>
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs" style={{background: '#3a3a3a'}}>
+                <span className="text-gray-400">总时长</span>
+                <span className="text-white ml-1 font-medium">{formatTimeTotal(practiceStats.totalTime)}</span>
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs" style={{background: '#3a3a3a'}}>
+                <span className="text-gray-400">本章</span>
+                <span className="text-white ml-1 font-medium">{practiceStats.chapterAccuracy}%</span>
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs" style={{background: '#3a3a3a'}}>
+                <span className="text-gray-400">总正确</span>
+                <span className="text-white ml-1 font-medium">{practiceStats.overallAccuracy}%</span>
+              </div>
+            </div>
+          )}
 
           {/* Navigation */}
           <div className="hidden md:flex items-center space-x-2">
