@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人工智能训练师三级 - 知识图谱</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a3e 50%, #0d0d2b 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(15, 15, 40, 0.95);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(100, 200, 255, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(90deg, #00d4ff, #7b68ee, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            color: #8888aa;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            background: rgba(100, 200, 255, 0.1);
+            color: #00d4ff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(100, 200, 255, 0.2);
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+        }
+
+        .search-box {
+            padding: 8px 12px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            background: rgba(20, 20, 50, 0.8);
+            color: #e0e0e0;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 13px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 65px);
+        }
+
+        .sidebar {
+            width: 320px;
+            background: rgba(15, 15, 40, 0.95);
+            border-right: 1px solid rgba(100, 200, 255, 0.2);
+            overflow-y: auto;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(100, 200, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .category-card {
+            background: rgba(30, 30, 70, 0.6);
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            background: rgba(40, 40, 90, 0.8);
+            border-color: rgba(100, 200, 255, 0.4);
+            transform: translateX(5px);
+        }
+
+        .category-card.selected {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .category-card .icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .category-card .title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .category-card .count {
+            font-size: 12px;
+            color: #8888aa;
+        }
+
+        .category-card .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .category-card .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        #graph-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #knowledge-graph {
+            width: 100%;
+            height: 100%;
+        }
+
+        .detail-panel {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 350px;
+            max-height: calc(100% - 40px);
+            background: rgba(15, 15, 40, 0.95);
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            overflow-y: auto;
+            display: none;
+            animation: slideIn 0.3s ease;
+            z-index: 50;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .detail-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .detail-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-panel::-webkit-scrollbar-thumb {
+            background: rgba(100, 200, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .detail-panel .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #8888aa;
+            transition: color 0.3s;
+        }
+
+        .detail-panel .close-btn:hover {
+            color: #ff6b9d;
+        }
+
+        .detail-panel .node-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .detail-panel .node-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #00d4ff;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .detail-panel .node-type {
+            text-align: center;
+            color: #8888aa;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .detail-panel .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #7b68ee;
+            margin: 15px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(123, 104, 238, 0.3);
+        }
+
+        .detail-panel .knowledge-list {
+            list-style: none;
+        }
+
+        .detail-panel .knowledge-list li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(30, 30, 70, 0.5);
+            border-radius: 6px;
+            font-size: 13px;
+            color: #ccccdd;
+            border-left: 3px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .detail-panel .related-nodes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .detail-panel .related-tag {
+            padding: 5px 10px;
+            background: rgba(123, 104, 238, 0.2);
+            border: 1px solid rgba(123, 104, 238, 0.3);
+            border-radius: 15px;
+            font-size: 12px;
+            color: #b8b8ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .detail-panel .related-tag:hover {
+            background: rgba(123, 104, 238, 0.4);
+            border-color: #7b68ee;
+        }
+
+        .stats-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(15, 15, 40, 0.9);
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .stat-item .stat-label {
+            font-size: 11px;
+            color: #8888aa;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(15, 15, 40, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+        }
+
+        .legend-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #ccccdd;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 15, 40, 0.95);
+            border: 1px solid rgba(100, 200, 255, 0.4);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #e0e0e0;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 250px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .tooltip .tip-title {
+            font-weight: 600;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(100, 200, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🧠 人工智能训练师三级 - 知识图谱</h1>
+            <div class="subtitle">Interactive Knowledge Graph · 900+ 题目知识点关联可视化</div>
+        </div>
+        <div class="controls">
+            <input type="text" class="search-box" placeholder="🔍 搜索知识点..." id="searchInput">
+            <button class="btn" id="btnReset" title="重置视图">🔄 重置</button>
+            <button class="btn" id="btnPhysics" title="物理引擎">⚡ 物理</button>
+            <button class="btn" id="btnHierarchy" title="层级布局">📊 层级</button>
+            <button class="btn" id="btnExpand" title="展开全部">🔓 展开</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <!-- Category cards will be inserted here -->
+        </div>
+        <div id="graph-container">
+            <div id="knowledge-graph"></div>
+            <div class="detail-panel" id="detailPanel">
+                <span class="close-btn" id="closeDetail">&times;</span>
+                <div id="detailContent"></div>
+            </div>
+            <div class="legend">
+                <div class="legend-title">图例说明</div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #ff6b9d;"></div>
+                    <span>核心概念</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #00d4ff;"></div>
+                    <span>知识领域</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #7b68ee;"></div>
+                    <span>知识模块</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #50fa7b;"></div>
+                    <span>具体知识点</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #ffb86c;"></div>
+                    <span>工具/技术</span>
+                </div>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="statNodes">0</div>
+                    <div class="stat-label">知识节点</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statEdges">0</div>
+                    <div class="stat-label">关联关系</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statCategories">16</div>
+                    <div class="stat-label">知识领域</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">900</div>
+                    <div class="stat-label">题目总数</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip">
+        <div class="tip-title" id="tipTitle"></div>
+        <div id="tipContent"></div>
+    </div>
+
+    <script>
+        // Knowledge Graph Data
+        const knowledgeData = {
+            nodes: [
+                // Core
+                { id: 'core', label: '人工智能\n训练师', group: 'core', icon: '🧠', level: 0, description: '人工智能训练师三级认证核心知识体系', questionCount: 900 },
+
+                // Level 1 - Major Domains
+                { id: 'ethics', label: '职业道德\n与守则', group: 'domain', icon: '⚖️', level: 1, description: '职业道德规范、职业守则制定与执行', questionCount: 41, category: '职业道德与职业守则' },
+                { id: 'law', label: '法律法规\n与知识产权', group: 'domain', icon: '📜', level: 1, description: '劳动合同法、网络安全法、知识产权保护', questionCount: 76, category: '法律法规与知识产权' },
+                { id: 'computer', label: '计算机基础\n与办公软件', group: 'domain', icon: '💻', level: 1, description: 'Windows系统、Office办公软件、浏览器使用', questionCount: 83, category: '计算机基础与办公软件' },
+                { id: 'data_collection', label: '数据采集\n与处理', group: 'domain', icon: '📥', level: 1, description: '数据抓取、爬虫技术、ETL流程、数据清洗', questionCount: 108, category: '数据采集与处理' },
+                { id: 'data_storage', label: '数据存储\n与管理', group: 'domain', icon: '💾', level: 1, description: '数据库、云服务、数据治理、数据安全', questionCount: 59, category: '数据存储与管理' },
+                { id: 'ai_basics', label: '人工智能\n基础', group: 'domain', icon: '🤖', level: 1, description: '机器学习、深度学习、神经网络、算法基础', questionCount: 227, category: '人工智能基础' },
+                { id: 'data_annotation', label: '数据标注\n与特征工程', group: 'domain', icon: '🏷️', level: 1, description: '数据标注流程、特征提取、特征选择、降维', questionCount: 35, category: '数据标注与特征工程' },
+                { id: 'model_training', label: '模型训练\n与优化', group: 'domain', icon: '🎯', level: 1, description: '训练策略、超参数调优、损失函数、正则化', questionCount: 28, category: '模型训练与优化' },
+                { id: 'model_deploy', label: '模型评估\n与部署', group: 'domain', icon: '🚀', level: 1, description: '评估指标、模型部署、容器化、性能监控', questionCount: 39, category: '模型评估与部署' },
+                { id: 'smart_app', label: '智能应用\n与系统', group: 'domain', icon: '🔮', level: 1, description: '推荐系统、NLP、计算机视觉、知识图谱', questionCount: 20, category: '智能应用与系统' },
+                { id: 'business', label: '业务流程\n与优化', group: 'domain', icon: '📊', level: 1, description: '流程分析、流程优化、BPM、效率提升', questionCount: 36, category: '业务流程与优化' },
+                { id: 'hci', label: '人机交互\n与界面设计', group: 'domain', icon: '🎨', level: 1, description: '交互设计、UI/UX、原型设计、用户研究', questionCount: 49, category: '人机交互与界面设计' },
+                { id: 'training', label: '培训\n与教学', group: 'domain', icon: '📚', level: 1, description: '培训方法、讲义编写、案例分析、教学设计', questionCount: 15, category: '培训与教学' },
+                { id: 'visualization', label: '数据可视化\n与分析', group: 'domain', icon: '📈', level: 1, description: '数据可视化工具、探索性分析、统计分析', questionCount: 6, category: '数据可视化与分析工具' },
+                { id: 'testing', label: '系统测试\n与性能', group: 'domain', icon: '🔧', level: 1, description: '测试方法、性能监控、日志分析、安全测试', questionCount: 11, category: '系统测试与性能优化' },
+
+                // Level 2 - Knowledge Modules (Ethics)
+                { id: 'moral_eval', label: '道德评价', group: 'module', icon: '📋', level: 2, description: '道德评价的标准和方法', parent: 'ethics' },
+                { id: 'professional_code', label: '职业守则', group: 'module', icon: '📖', level: 2, description: '职业守则的制定、内容与执行', parent: 'ethics' },
+                { id: 'dedication', label: '爱岗敬业', group: 'module', icon: '💪', level: 2, description: '爱岗敬业的具体表现和要求', parent: 'ethics' },
+                { id: 'integrity', label: '诚实守信', group: 'module', icon: '🤝', level: 2, description: '诚实守信在职业中的体现', parent: 'ethics' },
+
+                // Level 2 - Knowledge Modules (Law)
+                { id: 'labor_law', label: '劳动合同法', group: 'module', icon: '📑', level: 2, description: '劳动合同的签订、变更、解除', parent: 'law' },
+                { id: 'cybersecurity', label: '网络安全法', group: 'module', icon: '🔒', level: 2, description: '网络安全保障义务、数据保护', parent: 'law' },
+                { id: 'ip_protection', label: '知识产权保护', group: 'module', icon: '©️', level: 2, description: '专利、著作权、商标保护', parent: 'law' },
+                { id: 'privacy', label: '隐私保护', group: 'module', icon: '🛡️', level: 2, description: '用户隐私保护措施和法规', parent: 'law' },
+
+                // Level 2 - Knowledge Modules (Computer)
+                { id: 'windows', label: 'Windows系统', group: 'module', icon: '🪟', level: 2, description: '系统维护、故障排除、小工具', parent: 'computer' },
+                { id: 'office_suite', label: 'Office办公', group: 'module', icon: '📝', level: 2, description: 'Word、Excel、PowerPoint使用', parent: 'computer' },
+                { id: 'browser', label: '浏览器使用', group: 'module', icon: '🌐', level: 2, description: '网页浏览、开发者工具、高级功能', parent: 'computer' },
+
+                // Level 2 - Knowledge Modules (Data Collection)
+                { id: 'web_scraping', label: '网络爬虫', group: 'module', icon: '🕷️', level: 2, description: 'Python爬虫、Scrapy、BeautifulSoup', parent: 'data_collection' },
+                { id: 'etl', label: 'ETL流程', group: 'module', icon: '🔄', level: 2, description: '数据抽取、转换、加载', parent: 'data_collection' },
+                { id: 'data_cleaning', label: '数据清洗', group: 'module', icon: '🧹', level: 2, description: '缺失值、异常值、重复值处理', parent: 'data_collection' },
+                { id: 'data_quality', label: '数据质量', group: 'module', icon: '✅', level: 2, description: '数据质量评估和监控', parent: 'data_collection' },
+
+                // Level 2 - Knowledge Modules (Data Storage)
+                { id: 'database', label: '数据库', group: 'module', icon: '🗄️', level: 2, description: '关系型与非关系型数据库', parent: 'data_storage' },
+                { id: 'cloud_service', label: '云服务', group: 'module', icon: '☁️', level: 2, description: '云平台、弹性计算、按需付费', parent: 'data_storage' },
+                { id: 'data_governance', label: '数据治理', group: 'module', icon: '🏗️', level: 2, description: '数据管理、数据安全、数据追溯', parent: 'data_storage' },
+
+                // Level 2 - Knowledge Modules (AI Basics)
+                { id: 'ml_basics', label: '机器学习基础', group: 'module', icon: '📊', level: 2, description: '监督学习、无监督学习、强化学习', parent: 'ai_basics' },
+                { id: 'deep_learning', label: '深度学习', group: 'module', icon: '🧠', level: 2, description: '神经网络、CNN、RNN、Transformer', parent: 'ai_basics' },
+                { id: 'algorithms', label: '算法基础', group: 'module', icon: '⚙️', level: 2, description: '分类、聚类、回归、优化算法', parent: 'ai_basics' },
+                { id: 'data_mining', label: '数据挖掘', group: 'module', icon: '⛏️', level: 2, description: '知识发现、模式识别、关联规则', parent: 'ai_basics' },
+
+                // Level 2 - Knowledge Modules (Data Annotation)
+                { id: 'annotation_process', label: '标注流程', group: 'module', icon: '📋', level: 2, description: '标注规范、标注工具、质量控制', parent: 'data_annotation' },
+                { id: 'feature_eng', label: '特征工程', group: 'module', icon: '🔧', level: 2, description: '特征提取、特征选择、降维技术', parent: 'data_annotation' },
+
+                // Level 2 - Knowledge Modules (Model Training)
+                { id: 'training_strategy', label: '训练策略', group: 'module', icon: '🎯', level: 2, description: '学习率、批量大小、优化器选择', parent: 'model_training' },
+                { id: 'hyperparameter', label: '超参数调优', group: 'module', icon: '🎛️', level: 2, description: '网格搜索、随机搜索、贝叶斯优化', parent: 'model_training' },
+                { id: 'regularization', label: '正则化技术', group: 'module', icon: '🛡️', level: 2, description: 'L1/L2正则化、早停、Dropout', parent: 'model_training' },
+
+                // Level 2 - Knowledge Modules (Model Deploy)
+                { id: 'evaluation_metrics', label: '评估指标', group: 'module', icon: '📏', level: 2, description: '准确率、召回率、精确率、F1', parent: 'model_deploy' },
+                { id: 'deployment', label: '模型部署', group: 'module', icon: '🚀', level: 2, description: '容器化、微服务、边缘部署', parent: 'model_deploy' },
+                { id: 'monitoring', label: '性能监控', group: 'module', icon: '📊', level: 2, description: '日志分析、性能指标、告警机制', parent: 'model_deploy' },
+
+                // Level 2 - Knowledge Modules (Smart App)
+                { id: 'nlp', label: '自然语言处理', group: 'module', icon: '💬', level: 2, description: '文本分类、情感分析、命名实体识别', parent: 'smart_app' },
+                { id: 'cv', label: '计算机视觉', group: 'module', icon: '👁️', level: 2, description: '图像分类、目标检测、图像分割', parent: 'smart_app' },
+                { id: 'recommendation', label: '推荐系统', group: 'module', icon: '🎯', level: 2, description: '协同过滤、内容推荐、混合推荐', parent: 'smart_app' },
+                { id: 'knowledge_graph', label: '知识图谱', group: 'module', icon: '🕸️', level: 2, description: '实体关系、知识表示、图数据库', parent: 'smart_app' },
+
+                // Level 2 - Knowledge Modules (Business)
+                { id: 'process_analysis', label: '流程分析', group: 'module', icon: '🔍', level: 2, description: '流程图、SWOT分析、5W1H分析', parent: 'business' },
+                { id: 'process_optimization', label: '流程优化', group: 'module', icon: '⚡', level: 2, description: '流程再造、持续改进、自动化', parent: 'business' },
+
+                // Level 2 - Knowledge Modules (HCI)
+                { id: 'interaction_design', label: '交互设计', group: 'module', icon: '🖱️', level: 2, description: '交互模式、反馈机制、多模态交互', parent: 'hci' },
+                { id: 'ui_design', label: '界面设计', group: 'module', icon: '🎨', level: 2, description: '布局策略、视觉设计、响应式设计', parent: 'hci' },
+                { id: 'prototype', label: '原型设计', group: 'module', icon: '📐', level: 2, description: '低保真/高保真原型、用户测试', parent: 'hci' },
+
+                // Level 2 - Knowledge Modules (Training)
+                { id: 'teaching_methods', label: '教学方法', group: 'module', icon: '👨‍🏫', level: 2, description: '讲授法、案例分析、角色扮演', parent: 'training' },
+                { id: 'course_design', label: '课程设计', group: 'module', icon: '📝', level: 2, description: '大纲设计、讲义编写、课件制作', parent: 'training' },
+
+                // Level 3 - Specific Knowledge Points (Tools)
+                { id: 'python', label: 'Python', group: 'tool', icon: '🐍', level: 3, description: '数据处理、机器学习、爬虫开发', keywords: ['Python', 'Pandas', 'NumPy'] },
+                { id: 'tensorflow', label: 'TensorFlow', group: 'tool', icon: '📦', level: 3, description: '深度学习框架、模型训练与部署', keywords: ['TensorFlow', 'Keras'] },
+                { id: 'pytorch', label: 'PyTorch', group: 'tool', icon: '🔥', level: 3, description: '动态计算图、快速原型设计', keywords: ['PyTorch'] },
+                { id: 'scikit', label: 'Scikit-learn', group: 'tool', icon: '🔬', level: 3, description: '传统机器学习算法库', keywords: ['Scikit-learn', 'sklearn'] },
+                { id: 'pandas_lib', label: 'Pandas', group: 'tool', icon: '🐼', level: 3, description: '数据处理与分析', keywords: ['Pandas', 'DataFrame'] },
+                { id: 'numpy_lib', label: 'NumPy', group: 'tool', icon: '🔢', level: 3, description: '数值计算、数组操作', keywords: ['NumPy', 'ndarray'] },
+                { id: 'matplotlib', label: 'Matplotlib', group: 'tool', icon: '📊', level: 3, description: '数据可视化', keywords: ['Matplotlib', 'Seaborn'] },
+                { id: 'powerbi', label: 'Power BI', group: 'tool', icon: '📈', level: 3, description: '商业智能、数据可视化', keywords: ['Power BI', 'PowerBI'] },
+                { id: 'docker', label: 'Docker', group: 'tool', icon: '🐳', level: 3, description: '容器化部署', keywords: ['Docker', '容器化'] },
+                { id: 'excel_tool', label: 'Excel', group: 'tool', icon: '📗', level: 3, description: '数据处理、图表、宏', keywords: ['Excel', 'VBA'] },
+                { id: 'word_tool', label: 'Word', group: 'tool', icon: '📘', level: 3, description: '文档编辑、样式、排版', keywords: ['Word'] },
+                { id: 'mysql', label: 'MySQL', group: 'tool', icon: '🐬', level: 3, description: '关系型数据库', keywords: ['MySQL', 'SQL'] },
+                { id: 'mongodb', label: 'MongoDB', group: 'tool', icon: '🍃', level: 3, description: '非关系型数据库', keywords: ['MongoDB', 'NoSQL'] },
+                { id: 'scrapy_tool', label: 'Scrapy', group: 'tool', icon: '🕷️', level: 3, description: 'Python爬虫框架', keywords: ['Scrapy'] },
+                { id: 'requests_lib', label: 'Requests', group: 'tool', icon: '📡', level: 3, description: 'HTTP请求库', keywords: ['Requests'] },
+                { id: 'beautifulsoup', label: 'BeautifulSoup', group: 'tool', icon: '🍲', level: 3, description: 'HTML解析库', keywords: ['BeautifulSoup'] },
+                { id: 'adobe_xd', label: 'Adobe XD', group: 'tool', icon: '🎨', level: 3, description: '原型设计工具', keywords: ['Adobe XD'] },
+                { id: 'figma', label: 'Figma', group: 'tool', icon: '🖌️', level: 3, description: '协作设计工具', keywords: ['Figma'] },
+                { id: 'axure', label: 'Axure RP', group: 'tool', icon: '📐', level: 3, description: '高保真原型工具', keywords: ['Axure'] },
+                { id: 'sketch_tool', label: 'Sketch', group: 'tool', icon: '✏️', level: 3, description: '矢量设计工具', keywords: ['Sketch'] },
+
+                // Level 3 - Specific Knowledge Points (Concepts)
+                { id: 'cnn', label: 'CNN', group: 'knowledge', icon: '🖼️', level: 3, description: '卷积神经网络，用于图像处理', parent: 'deep_learning' },
+                { id: 'rnn', label: 'RNN/LSTM', group: 'knowledge', icon: '🔄', level: 3, description: '循环神经网络，用于序列数据', parent: 'deep_learning' },
+                { id: 'transformer', label: 'Transformer', group: 'knowledge', icon: '⚡', level: 3, description: '自注意力机制，NLP核心架构', parent: 'deep_learning' },
+                { id: 'gan', label: 'GAN', group: 'knowledge', icon: '🎭', level: 3, description: '生成对抗网络，用于数据生成', parent: 'deep_learning' },
+                { id: 'pca', label: 'PCA', group: 'knowledge', icon: '📉', level: 3, description: '主成分分析，降维技术', parent: 'feature_eng' },
+                { id: 'svm', label: 'SVM', group: 'knowledge', icon: '📏', level: 3, description: '支持向量机，分类算法', parent: 'algorithms' },
+                { id: 'decision_tree', label: '决策树', group: 'knowledge', icon: '🌳', level: 3, description: '树形分类模型', parent: 'algorithms' },
+                { id: 'random_forest', label: '随机森林', group: 'knowledge', icon: '🌲', level: 3, description: '集成学习方法', parent: 'algorithms' },
+                { id: 'kmeans', label: 'K-Means', group: 'knowledge', icon: '🎯', level: 3, description: '聚类算法', parent: 'algorithms' },
+                { id: 'linear_reg', label: '线性回归', group: 'knowledge', icon: '📈', level: 3, description: '回归分析基础算法', parent: 'algorithms' },
+                { id: 'logistic_reg', label: '逻辑回归', group: 'knowledge', icon: '📊', level: 3, description: '分类算法', parent: 'algorithms' },
+                { id: 'cross_validation', label: '交叉验证', group: 'knowledge', icon: '🔀', level: 3, description: '模型评估方法', parent: 'evaluation_metrics' },
+                { id: 'overfitting', label: '过拟合', group: 'knowledge', icon: '⚠️', level: 3, description: '模型泛化能力问题', parent: 'regularization' },
+                { id: 'gradient_descent', label: '梯度下降', group: 'knowledge', icon: '⬇️', level: 3, description: '优化算法基础', parent: 'training_strategy' },
+                { id: 'loss_function', label: '损失函数', group: 'knowledge', icon: '📉', level: 3, description: '模型优化目标', parent: 'training_strategy' },
+                { id: 'batch_norm', label: '批量归一化', group: 'knowledge', icon: '📊', level: 3, description: '训练加速技术', parent: 'training_strategy' },
+                { id: 'dropout', label: 'Dropout', group: 'knowledge', icon: '🎲', level: 3, description: '正则化技术', parent: 'regularization' },
+                { id: 'data_augmentation', label: '数据增强', group: 'knowledge', icon: '🔄', level: 3, description: '增加数据多样性', parent: 'annotation_process' },
+                { id: 'normalization', label: '数据归一化', group: 'knowledge', icon: '📐', level: 3, description: '数据预处理技术', parent: 'data_cleaning' },
+                { id: 'missing_values', label: '缺失值处理', group: 'knowledge', icon: '❓', level: 3, description: '填充、删除、插值', parent: 'data_cleaning' },
+                { id: 'outlier_detection', label: '异常值检测', group: 'knowledge', icon: '🔍', level: 3, description: 'Z-score、IQR、DBSCAN', parent: 'data_cleaning' },
+                { id: 'collaborative_filter', label: '协同过滤', group: 'knowledge', icon: '👥', level: 3, description: '推荐系统核心算法', parent: 'recommendation' },
+                { id: 'sentiment_analysis', label: '情感分析', group: 'knowledge', icon: '😊', level: 3, description: '文本情感判断', parent: 'nlp' },
+                { id: 'ner', label: '命名实体识别', group: 'knowledge', icon: '🏷️', level: 3, description: 'NLP基础任务', parent: 'nlp' },
+                { id: 'object_detection', label: '目标检测', group: 'knowledge', icon: '🎯', level: 3, description: 'YOLO、R-CNN', parent: 'cv' },
+                { id: 'image_classification', label: '图像分类', group: 'knowledge', icon: '🖼️', level: 3, description: 'CV基础任务', parent: 'cv' },
+                { id: 'tokenization', label: '分词', group: 'knowledge', icon: '✂️', level: 3, description: '文本预处理', parent: 'nlp' },
+                { id: 'word_embedding', label: '词向量', group: 'knowledge', icon: '📐', level: 3, description: 'Word2Vec、GloVe', parent: 'nlp' },
+                { id: 'attention', label: '注意力机制', group: 'knowledge', icon: '👁️', level: 3, description: 'Transformer核心', parent: 'transformer' },
+                { id: 'transfer_learning', label: '迁移学习', group: 'knowledge', icon: '🔄', level: 3, description: '预训练模型微调', parent: 'deep_learning' },
+                { id: 'ensemble', label: '集成学习', group: 'knowledge', icon: '🤝', level: 3, description: 'Bagging、Boosting', parent: 'algorithms' },
+                { id: 'bayesian', label: '贝叶斯网络', group: 'knowledge', icon: '🎲', level: 3, description: '概率图模型', parent: 'algorithms' },
+                { id: 'reinforcement', label: '强化学习', group: 'knowledge', icon: '🎮', level: 3, description: 'Q-learning、策略梯度', parent: 'ml_basics' },
+                { id: 'semi_supervised', label: '半监督学习', group: 'knowledge', icon: '🔗', level: 3, description: '少量标注数据学习', parent: 'ml_basics' },
+                { id: 'active_learning', label: '主动学习', group: 'knowledge', icon: '🎯', level: 3, description: '智能选择标注样本', parent: 'annotation_process' },
+                { id: 'data_sharding', label: '数据分片', group: 'knowledge', icon: '📦', level: 3, description: '分布式数据存储', parent: 'data_governance' },
+                { id: 'distributed_computing', label: '分布式计算', group: 'knowledge', icon: '🌐', level: 3, description: 'Spark、Hadoop', parent: 'data_storage' },
+                { id: 'containerization', label: '容器化技术', group: 'knowledge', icon: '🐳', level: 3, description: 'Docker、Kubernetes', parent: 'deployment' },
+                { id: 'microservice', label: '微服务架构', group: 'knowledge', icon: '🔧', level: 3, description: '服务拆分、API网关', parent: 'deployment' },
+                { id: 'load_balancing', label: '负载均衡', group: 'knowledge', icon: '⚖️', level: 3, description: '资源分配策略', parent: 'monitoring' },
+                { id: 'logging', label: '日志分析', group: 'knowledge', icon: '📝', level: 3, description: 'ELK Stack、日志监控', parent: 'monitoring' },
+                { id: 'ab_testing', label: 'A/B测试', group: 'knowledge', icon: '🧪', level: 3, description: '用户体验测试方法', parent: 'prototype' },
+                { id: 'user_research', label: '用户研究', group: 'knowledge', icon: '👥', level: 3, description: '访谈、问卷、观察', parent: 'interaction_design' },
+                { id: 'responsive_design', label: '响应式设计', group: 'knowledge', icon: '📱', level: 3, description: '多设备适配', parent: 'ui_design' },
+                { id: 'wireframe', label: '线框图', group: 'knowledge', icon: '✏️', level: 3, description: '低保真原型', parent: 'prototype' },
+                { id: 'mockup', label: '高保真原型', group: 'knowledge', icon: '🎨', level: 3, description: '视觉设计稿', parent: 'prototype' },
+            ],
+            edges: [
+                // Core to Level 1
+                { from: 'core', to: 'ethics' },
+                { from: 'core', to: 'law' },
+                { from: 'core', to: 'computer' },
+                { from: 'core', to: 'data_collection' },
+                { from: 'core', to: 'data_storage' },
+                { from: 'core', to: 'ai_basics' },
+                { from: 'core', to: 'data_annotation' },
+                { from: 'core', to: 'model_training' },
+                { from: 'core', to: 'model_deploy' },
+                { from: 'core', to: 'smart_app' },
+                { from: 'core', to: 'business' },
+                { from: 'core', to: 'hci' },
+                { from: 'core', to: 'training' },
+                { from: 'core', to: 'visualization' },
+                { from: 'core', to: 'testing' },
+
+                // Level 1 to Level 2 (Ethics)
+                { from: 'ethics', to: 'moral_eval' },
+                { from: 'ethics', to: 'professional_code' },
+                { from: 'ethics', to: 'dedication' },
+                { from: 'ethics', to: 'integrity' },
+
+                // Level 1 to Level 2 (Law)
+                { from: 'law', to: 'labor_law' },
+                { from: 'law', to: 'cybersecurity' },
+                { from: 'law', to: 'ip_protection' },
+                { from: 'law', to: 'privacy' },
+
+                // Level 1 to Level 2 (Computer)
+                { from: 'computer', to: 'windows' },
+                { from: 'computer', to: 'office_suite' },
+                { from: 'computer', to: 'browser' },
+
+                // Level 1 to Level 2 (Data Collection)
+                { from: 'data_collection', to: 'web_scraping' },
+                { from: 'data_collection', to: 'etl' },
+                { from: 'data_collection', to: 'data_cleaning' },
+                { from: 'data_collection', to: 'data_quality' },
+
+                // Level 1 to Level 2 (Data Storage)
+                { from: 'data_storage', to: 'database' },
+                { from: 'data_storage', to: 'cloud_service' },
+                { from: 'data_storage', to: 'data_governance' },
+
+                // Level 1 to Level 2 (AI Basics)
+                { from: 'ai_basics', to: 'ml_basics' },
+                { from: 'ai_basics', to: 'deep_learning' },
+                { from: 'ai_basics', to: 'algorithms' },
+                { from: 'ai_basics', to: 'data_mining' },
+
+                // Level 1 to Level 2 (Data Annotation)
+                { from: 'data_annotation', to: 'annotation_process' },
+                { from: 'data_annotation', to: 'feature_eng' },
+
+                // Level 1 to Level 2 (Model Training)
+                { from: 'model_training', to: 'training_strategy' },
+                { from: 'model_training', to: 'hyperparameter' },
+                { from: 'model_training', to: 'regularization' },
+
+                // Level 1 to Level 2 (Model Deploy)
+                { from: 'model_deploy', to: 'evaluation_metrics' },
+                { from: 'model_deploy', to: 'deployment' },
+                { from: 'model_deploy', to: 'monitoring' },
+
+                // Level 1 to Level 2 (Smart App)
+                { from: 'smart_app', to: 'nlp' },
+                { from: 'smart_app', to: 'cv' },
+                { from: 'smart_app', to: 'recommendation' },
+                { from: 'smart_app', to: 'knowledge_graph' },
+
+                // Level 1 to Level 2 (Business)
+                { from: 'business', to: 'process_analysis' },
+                { from: 'business', to: 'process_optimization' },
+
+                // Level 1 to Level 2 (HCI)
+                { from: 'hci', to: 'interaction_design' },
+                { from: 'hci', to: 'ui_design' },
+                { from: 'hci', to: 'prototype' },
+
+                // Level 1 to Level 2 (Training)
+                { from: 'training', to: 'teaching_methods' },
+                { from: 'training', to: 'course_design' },
+
+                // Level 2 to Level 3 (Deep Learning)
+                { from: 'deep_learning', to: 'cnn' },
+                { from: 'deep_learning', to: 'rnn' },
+                { from: 'deep_learning', to: 'transformer' },
+                { from: 'deep_learning', to: 'gan' },
+                { from: 'deep_learning', to: 'transfer_learning' },
+
+                // Level 2 to Level 3 (Algorithms)
+                { from: 'algorithms', to: 'svm' },
+                { from: 'algorithms', to: 'decision_tree' },
+                { from: 'algorithms', to: 'random_forest' },
+                { from: 'algorithms', to: 'kmeans' },
+                { from: 'algorithms', to: 'linear_reg' },
+                { from: 'algorithms', to: 'logistic_reg' },
+                { from: 'algorithms', to: 'ensemble' },
+                { from: 'algorithms', to: 'bayesian' },
+
+                // Level 2 to Level 3 (ML Basics)
+                { from: 'ml_basics', to: 'reinforcement' },
+                { from: 'ml_basics', to: 'semi_supervised' },
+
+                // Level 2 to Level 3 (Feature Engineering)
+                { from: 'feature_eng', to: 'pca' },
+
+                // Level 2 to Level 3 (Evaluation)
+                { from: 'evaluation_metrics', to: 'cross_validation' },
+
+                // Level 2 to Level 3 (Regularization)
+                { from: 'regularization', to: 'overfitting' },
+                { from: 'regularization', to: 'dropout' },
+
+                // Level 2 to Level 3 (Training Strategy)
+                { from: 'training_strategy', to: 'gradient_descent' },
+                { from: 'training_strategy', to: 'loss_function' },
+                { from: 'training_strategy', to: 'batch_norm' },
+
+                // Level 2 to Level 3 (Data Cleaning)
+                { from: 'data_cleaning', to: 'normalization' },
+                { from: 'data_cleaning', to: 'missing_values' },
+                { from: 'data_cleaning', to: 'outlier_detection' },
+
+                // Level 2 to Level 3 (Annotation)
+                { from: 'annotation_process', to: 'data_augmentation' },
+                { from: 'annotation_process', to: 'active_learning' },
+
+                // Level 2 to Level 3 (NLP)
+                { from: 'nlp', to: 'sentiment_analysis' },
+                { from: 'nlp', to: 'ner' },
+                { from: 'nlp', to: 'tokenization' },
+                { from: 'nlp', to: 'word_embedding' },
+
+                // Level 2 to Level 3 (CV)
+                { from: 'cv', to: 'object_detection' },
+                { from: 'cv', to: 'image_classification' },
+
+                // Level 2 to Level 3 (Recommendation)
+                { from: 'recommendation', to: 'collaborative_filter' },
+
+                // Level 2 to Level 3 (Transformer)
+                { from: 'transformer', to: 'attention' },
+
+                // Level 2 to Level 3 (Deployment)
+                { from: 'deployment', to: 'containerization' },
+                { from: 'deployment', to: 'microservice' },
+
+                // Level 2 to Level 3 (Monitoring)
+                { from: 'monitoring', to: 'load_balancing' },
+                { from: 'monitoring', to: 'logging' },
+
+                // Level 2 to Level 3 (Prototype)
+                { from: 'prototype', to: 'ab_testing' },
+                { from: 'prototype', to: 'wireframe' },
+                { from: 'prototype', to: 'mockup' },
+
+                // Level 2 to Level 3 (Interaction Design)
+                { from: 'interaction_design', to: 'user_research' },
+
+                // Level 2 to Level 3 (UI Design)
+                { from: 'ui_design', to: 'responsive_design' },
+
+                // Level 2 to Level 3 (Data Governance)
+                { from: 'data_governance', to: 'data_sharding' },
+
+                // Level 2 to Level 3 (Data Storage)
+                { from: 'data_storage', to: 'distributed_computing' },
+
+                // Cross-domain relationships
+                { from: 'python', to: 'web_scraping', dashes: true, label: '常用于' },
+                { from: 'python', to: 'data_cleaning', dashes: true, label: '常用于' },
+                { from: 'python', to: 'ml_basics', dashes: true, label: '常用于' },
+                { from: 'tensorflow', to: 'deep_learning', dashes: true, label: '框架支持' },
+                { from: 'pytorch', to: 'deep_learning', dashes: true, label: '框架支持' },
+                { from: 'scikit', to: 'algorithms', dashes: true, label: '算法实现' },
+                { from: 'pandas_lib', to: 'data_cleaning', dashes: true, label: '数据处理' },
+                { from: 'numpy_lib', to: 'ml_basics', dashes: true, label: '数值计算' },
+                { from: 'docker', to: 'containerization', dashes: true, label: '技术实现' },
+                { from: 'powerbi', to: 'visualization', dashes: true, label: '可视化工具' },
+                { from: 'excel_tool', to: 'data_cleaning', dashes: true, label: '数据处理' },
+                { from: 'mysql', to: 'database', dashes: true, label: '关系型数据库' },
+                { from: 'mongodb', to: 'database', dashes: true, label: '非关系型数据库' },
+                { from: 'scrapy_tool', to: 'web_scraping', dashes: true, label: '爬虫框架' },
+                { from: 'adobe_xd', to: 'prototype', dashes: true, label: '设计工具' },
+                { from: 'figma', to: 'ui_design', dashes: true, label: '设计工具' },
+                { from: 'axure', to: 'prototype', dashes: true, label: '原型工具' },
+                { from: 'sketch_tool', to: 'ui_design', dashes: true, label: '设计工具' },
+
+                // Knowledge cross-links
+                { from: 'cnn', to: 'image_classification', dashes: true, label: '应用于' },
+                { from: 'cnn', to: 'object_detection', dashes: true, label: '应用于' },
+                { from: 'rnn', to: 'sentiment_analysis', dashes: true, label: '应用于' },
+                { from: 'transformer', to: 'nlp', dashes: true, label: '核心架构' },
+                { from: 'gan', to: 'data_augmentation', dashes: true, label: '数据生成' },
+                { from: 'pca', to: 'feature_eng', dashes: true, label: '降维方法' },
+                { from: 'overfitting', to: 'cross_validation', dashes: true, label: '检测方法' },
+                { from: 'gradient_descent', to: 'loss_function', dashes: true, label: '优化目标' },
+                { from: 'collaborative_filter', to: 'recommendation', dashes: true, label: '核心算法' },
+                { from: 'sentiment_analysis', to: 'word_embedding', dashes: true, label: '依赖技术' },
+                { from: 'attention', to: 'nlp', dashes: true, label: '核心机制' },
+                { from: 'transfer_learning', to: 'cnn', dashes: true, label: '常用模型' },
+                { from: 'active_learning', to: 'annotation_process', dashes: true, label: '优化方法' },
+                { from: 'containerization', to: 'microservice', dashes: true, label: '部署方式' },
+            ]
+        };
+
+        // Initialize vis.js network
+        let network;
+        let allNodes;
+        let allEdges;
+        let physicsEnabled = true;
+
+        function initNetwork() {
+            const container = document.getElementById('knowledge-graph');
+
+            // Process nodes
+            const nodes = new vis.DataSet(knowledgeData.nodes.map(node => {
+                const groupConfig = getGroupConfig(node.group);
+                return {
+                    ...node,
+                    ...groupConfig,
+                    size: getNodeSize(node),
+                    font: {
+                        size: getNodeFontSize(node),
+                        color: '#ffffff',
+                        face: 'Microsoft YaHei',
+                        strokeWidth: 3,
+                        strokeColor: '#000000'
+                    },
+                    title: `<div style="padding:10px;"><strong>${node.label.replace(/\n/g, ' ')}</strong><br>${node.description}<br>题目数量: ${node.questionCount || '-'}</div>`,
+                    shape: node.group === 'core' ? 'star' : (node.group === 'tool' ? 'diamond' : 'dot'),
+                    borderWidth: node.group === 'core' ? 4 : 2,
+                    shadow: {
+                        enabled: true,
+                        color: groupConfig.color.replace(')', ', 0.5)').replace('rgb', 'rgba'),
+                        size: 15,
+                        x: 0,
+                        y: 0
+                    }
+                };
+            }));
+
+            // Process edges
+            const edges = new vis.DataSet(knowledgeData.edges.map(edge => ({
+                ...edge,
+                color: {
+                    color: edge.dashes ? 'rgba(255, 255, 255, 0.2)' : 'rgba(100, 200, 255, 0.4)',
+                    highlight: '#00d4ff',
+                    hover: '#7b68ee'
+                },
+                width: edge.dashes ? 1 : 2,
+                smooth: {
+                    type: 'continuous',
+                    roundness: 0.5
+                },
+                font: {
+                    size: 10,
+                    color: '#8888aa',
+                    strokeWidth: 0
+                }
+            })));
+
+            allNodes = nodes;
+            allEdges = edges;
+
+            const options = {
+                physics: {
+                    enabled: true,
+                    solver: 'forceAtlas2Based',
+                    forceAtlas2Based: {
+                        gravitationalConstant: -100,
+                        centralGravity: 0.01,
+                        springLength: 200,
+                        springConstant: 0.08,
+                        damping: 0.4,
+                        avoidOverlap: 0.8
+                    },
+                    stabilization: {
+                        enabled: true,
+                        iterations: 200,
+                        updateInterval: 25
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    zoomView: true,
+                    dragView: true,
+                    navigationButtons: false,
+                    keyboard: {
+                        enabled: true
+                    }
+                },
+                nodes: {
+                    font: {
+                        size: 14,
+                        face: 'Microsoft YaHei'
+                    }
+                },
+                layout: {
+                    improvedLayout: true,
+                    hierarchical: false
+                }
+            };
+
+            network = new vis.Network(container, { nodes, edges }, options);
+
+            // Event listeners
+            network.on('click', function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const node = nodes.get(nodeId);
+                    showDetail(node);
+                    highlightConnected(nodeId);
+                } else {
+                    hideDetail();
+                    resetHighlight();
+                }
+            });
+
+            network.on('hoverNode', function(params) {
+                const nodeId = params.node;
+                const node = nodes.get(nodeId);
+                showTooltip(params.event, node);
+            });
+
+            network.on('blurNode', function() {
+                hideTooltip();
+            });
+
+            network.on('stabilizationIterationsDone', function() {
+                updateStats();
+            });
+
+            // Populate sidebar
+            populateSidebar();
+
+            // Update stats
+            setTimeout(updateStats, 1000);
+        }
+
+        function getGroupConfig(group) {
+            const configs = {
+                core: { color: '#ff6b9d', font: { size: 18 } },
+                domain: { color: '#00d4ff' },
+                module: { color: '#7b68ee' },
+                knowledge: { color: '#50fa7b' },
+                tool: { color: '#ffb86c' }
+            };
+            return configs[group] || configs.knowledge;
+        }
+
+        function getNodeSize(node) {
+            if (node.group === 'core') return 50;
+            if (node.group === 'domain') return 35;
+            if (node.group === 'module') return 25;
+            return 18;
+        }
+
+        function getNodeFontSize(node) {
+            if (node.group === 'core') return 16;
+            if (node.group === 'domain') return 13;
+            if (node.group === 'module') return 11;
+            return 10;
+        }
+
+        function showDetail(node) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+
+            let html = `
+                <div class="node-icon">${node.icon}</div>
+                <div class="node-title">${node.label.replace(/\n/g, ' ')}</div>
+                <div class="node-type">${getGroupLabel(node.group)}</div>
+            `;
+
+            if (node.description) {
+                html += `
+                    <div class="section-title">📝 描述</div>
+                    <p style="font-size: 13px; color: #ccccdd; line-height: 1.6;">${node.description}</p>
+                `;
+            }
+
+            if (node.questionCount) {
+                html += `
+                    <div class="section-title">📊 题目统计</div>
+                    <p style="font-size: 14px; color: #00d4ff; font-weight: 600;">${node.questionCount} 道相关题目</p>
+                `;
+            }
+
+            // Get connected nodes
+            const connectedNodes = getConnectedNodes(node.id);
+            if (connectedNodes.length > 0) {
+                html += `
+                    <div class="section-title">🔗 关联知识点</div>
+                    <div class="related-nodes">
+                        ${connectedNodes.map(n => `<span class="related-tag" onclick="focusNode('${n.id}')">${n.icon} ${n.label.replace(/\n/g, ' ')}</span>`).join('')}
+                    </div>
+                `;
+            }
+
+            // Get knowledge points for domain nodes
+            if (node.category) {
+                const knowledgePoints = getKnowledgePoints(node.category);
+                if (knowledgePoints.length > 0) {
+                    html += `
+                        <div class="section-title">📚 核心知识点</div>
+                        <ul class="knowledge-list">
+                            ${knowledgePoints.map(kp => `<li>${kp}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+            }
+
+            content.innerHTML = html;
+            panel.style.display = 'block';
+        }
+
+        function hideDetail() {
+            document.getElementById('detailPanel').style.display = 'none';
+        }
+
+        function getGroupLabel(group) {
+            const labels = {
+                core: '核心概念',
+                domain: '知识领域',
+                module: '知识模块',
+                knowledge: '具体知识点',
+                tool: '工具/技术'
+            };
+            return labels[group] || '知识点';
+        }
+
+        function getConnectedNodes(nodeId) {
+            const connected = [];
+            const edges = knowledgeData.edges.filter(e => e.from === nodeId || e.to === nodeId);
+            edges.forEach(edge => {
+                const connectedId = edge.from === nodeId ? edge.to : edge.from;
+                const node = knowledgeData.nodes.find(n => n.id === connectedId);
+                if (node) connected.push(node);
+            });
+            return connected;
+        }
+
+        function getKnowledgePoints(category) {
+            const points = {
+                '职业道德与职业守则': [
+                    '道德评价的标准和方法',
+                    '职业守则的制定与执行',
+                    '爱岗敬业的具体表现',
+                    '诚实守信的职业要求',
+                    '奉献社会的职业精神',
+                    '人工智能训练师的伦理责任'
+                ],
+                '法律法规与知识产权': [
+                    '劳动合同法核心条款',
+                    '网络安全法保障义务',
+                    '知识产权保护原则',
+                    '专利申请与授权条件',
+                    '著作权保护范围',
+                    '用户隐私保护措施'
+                ],
+                '计算机基础与办公软件': [
+                    'Windows系统维护与故障排除',
+                    'Word文档编辑与排版',
+                    'Excel数据处理与分析',
+                    '浏览器高级功能使用',
+                    'Office快捷键应用',
+                    '系统优化工具使用'
+                ],
+                '数据采集与处理': [
+                    '网络爬虫技术（Scrapy、BeautifulSoup）',
+                    'ETL数据处理流程',
+                    '数据清洗方法（缺失值、异常值、重复值）',
+                    '数据质量评估与监控',
+                    '数据格式转换（CSV、JSON、XML）',
+                    '数据源选择与评估'
+                ],
+                '数据存储与管理': [
+                    '关系型数据库（MySQL、Oracle）',
+                    '非关系型数据库（MongoDB）',
+                    '云服务与云平台',
+                    '数据治理与数据安全',
+                    '数据备份与恢复',
+                    '分布式存储技术'
+                ],
+                '人工智能基础': [
+                    '机器学习基本流程',
+                    '监督学习与无监督学习',
+                    '深度学习架构（CNN、RNN、Transformer）',
+                    '常用算法（SVM、决策树、随机森林）',
+                    '数据挖掘与知识发现',
+                    '模型评估与选择'
+                ],
+                '数据标注与特征工程': [
+                    '数据标注流程与规范',
+                    '标注工具选择与使用',
+                    '特征提取方法（PCA、LDA）',
+                    '特征选择技术（过滤法、包装法、嵌入法）',
+                    '数据增强技术',
+                    '降维方法应用'
+                ],
+                '模型训练与优化': [
+                    '学习率调整策略',
+                    '损失函数选择',
+                    '超参数调优方法',
+                    '正则化技术（L1/L2、Dropout）',
+                    '早停法防止过拟合',
+                    '交叉验证方法'
+                ],
+                '模型评估与部署': [
+                    '评估指标（准确率、召回率、精确率、F1）',
+                    '混淆矩阵分析',
+                    '模型部署流程',
+                    '容器化技术（Docker）',
+                    '性能监控与日志分析',
+                    '模型版本管理'
+                ],
+                '智能应用与系统': [
+                    '自然语言处理任务',
+                    '计算机视觉应用',
+                    '推荐系统原理',
+                    '知识图谱构建',
+                    '智能交互设计',
+                    '语音识别技术'
+                ],
+                '业务流程与优化': [
+                    '业务流程分析方法',
+                    '流程图绘制与解读',
+                    '流程优化策略',
+                    'BPM业务流程管理',
+                    '效率提升方法',
+                    '持续改进机制'
+                ],
+                '人机交互与界面设计': [
+                    '交互设计原则',
+                    '用户体验设计',
+                    '原型设计工具（Adobe XD、Figma、Axure）',
+                    '界面布局策略',
+                    '响应式设计',
+                    '用户测试方法'
+                ],
+                '培训与教学': [
+                    '培训方法选择',
+                    '讲义编写规范',
+                    '案例分析法应用',
+                    '角色扮演法',
+                    '课程大纲设计',
+                    '教学效果评估'
+                ],
+                '数据可视化与分析工具': [
+                    'Power BI使用',
+                    '数据探索性分析',
+                    '统计分析方法',
+                    '数据可视化最佳实践',
+                    '报表设计与制作'
+                ],
+                '系统测试与性能优化': [
+                    '测试方法与策略',
+                    '性能监控工具',
+                    '日志分析技术',
+                    '安全测试方法',
+                    '负载均衡策略',
+                    '瓶颈分析与优化'
+                ]
+            };
+            return points[category] || [];
+        }
+
+        function highlightConnected(nodeId) {
+            const connectedNodes = new Set();
+            const connectedEdges = new Set();
+
+            connectedNodes.add(nodeId);
+
+            knowledgeData.edges.forEach((edge, index) => {
+                if (edge.from === nodeId || edge.to === nodeId) {
+                    connectedNodes.add(edge.from);
+                    connectedNodes.add(edge.to);
+                    connectedEdges.add(index);
+                }
+            });
+
+            // Update node styles
+            allNodes.forEach(node => {
+                if (connectedNodes.has(node.id)) {
+                    allNodes.update({
+                        id: node.id,
+                        opacity: 1,
+                        borderWidth: node.id === nodeId ? 4 : 2
+                    });
+                } else {
+                    allNodes.update({
+                        id: node.id,
+                        opacity: 0.15
+                    });
+                }
+            });
+
+            // Update edge styles
+            allEdges.forEach((edge, index) => {
+                if (connectedEdges.has(index)) {
+                    allEdges.update({
+                        id: edge.id,
+                        opacity: 1,
+                        width: 3
+                    });
+                } else {
+                    allEdges.update({
+                        id: edge.id,
+                        opacity: 0.1
+                    });
+                }
+            });
+        }
+
+        function resetHighlight() {
+            allNodes.forEach(node => {
+                allNodes.update({
+                    id: node.id,
+                    opacity: 1,
+                    borderWidth: node.group === 'core' ? 4 : 2
+                });
+            });
+
+            allEdges.forEach(edge => {
+                allEdges.update({
+                    id: edge.id,
+                    opacity: 1,
+                    width: edge.dashes ? 1 : 2
+                });
+            });
+        }
+
+        function focusNode(nodeId) {
+            network.focus(nodeId, { scale: 1.2, animation: true });
+            network.selectNodes([nodeId]);
+            const node = allNodes.get(nodeId);
+            showDetail(node);
+            highlightConnected(nodeId);
+        }
+
+        function showTooltip(event, node) {
+            const tooltip = document.getElementById('tooltip');
+            const tipTitle = document.getElementById('tipTitle');
+            const tipContent = document.getElementById('tipContent');
+
+            tipTitle.textContent = node.icon + ' ' + node.label.replace(/\n/g, ' ');
+            tipContent.textContent = node.description || '';
+
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pointer.DOM.x + 15) + 'px';
+            tooltip.style.top = (event.pointer.DOM.y + 15) + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        function populateSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const categories = knowledgeData.nodes.filter(n => n.group === 'domain');
+
+            const colors = ['#ff6b9d', '#00d4ff', '#7b68ee', '#50fa7b', '#ffb86c', '#ff79c6', '#8be9fd', '#bd93f9', '#f1fa8c', '#ffb86c', '#ff5555', '#50fa7b', '#bd93f9', '#8be9fd', '#ff79c6'];
+
+            categories.forEach((cat, index) => {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="icon">${cat.icon}</div>
+                    <div class="title">${cat.label.replace(/\n/g, ' ')}</div>
+                    <div class="count">${cat.questionCount} 道题目</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(cat.questionCount / 227 * 100)}%; background: ${colors[index % colors.length]};"></div>
+                    </div>
+                `;
+                card.onclick = () => {
+                    focusNode(cat.id);
+                    document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                };
+                sidebar.appendChild(card);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('statNodes').textContent = knowledgeData.nodes.length;
+            document.getElementById('statEdges').textContent = knowledgeData.edges.length;
+        }
+
+        // Control handlers
+        document.getElementById('btnReset').onclick = () => {
+            network.fit({ animation: true });
+            resetHighlight();
+            hideDetail();
+        };
+
+        document.getElementById('btnPhysics').onclick = function() {
+            physicsEnabled = !physicsEnabled;
+            network.setOptions({ physics: { enabled: physicsEnabled } });
+            this.classList.toggle('active');
+        };
+
+        document.getElementById('btnHierarchy').onclick = function() {
+            const isHierarchical = network.options.layout.hierarchical;
+            network.setOptions({
+                layout: {
+                    hierarchical: !isHierarchical
+                }
+            });
+            this.classList.toggle('active');
+        };
+
+        document.getElementById('btnExpand').onclick = function() {
+            network.fit({ animation: true, scale: 0.8 });
+        };
+
+        document.getElementById('closeDetail').onclick = hideDetail;
+
+        // Search functionality
+        document.getElementById('searchInput').oninput = function(e) {
+            const query = e.target.value.toLowerCase();
+            if (!query) {
+                resetHighlight();
+                return;
+            }
+
+            const matchedNodes = new Set();
+            knowledgeData.nodes.forEach(node => {
+                const searchText = (node.label + ' ' + node.description + ' ' + (node.keywords || []).join(' ')).toLowerCase();
+                if (searchText.includes(query)) {
+                    matchedNodes.add(node.id);
+                }
+            });
+
+            allNodes.forEach(node => {
+                if (matchedNodes.has(node.id)) {
+                    allNodes.update({ id: node.id, opacity: 1, borderWidth: 4 });
+                } else {
+                    allNodes.update({ id: node.id, opacity: 0.1 });
+                }
+            });
+        };
+
+        // Initialize
+        window.onload = initNetwork;
+    </script>
+</body>
+</html>

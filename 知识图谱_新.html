@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识图谱 · 人工智能训练师三级</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: #737373;
+            margin-top: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-input {
+            width: 240px;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #111;
+            background: #f5f5f5;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .search-input:focus {
+            background: #fff;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a3a3a3;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: 1px solid #e5e5e5;
+            background: #fff;
+            color: #525252;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #f5f5f5;
+            border-color: #d4d4d4;
+        }
+
+        .btn.active {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            color: #fff;
+        }
+
+        /* Main content */
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #fff;
+            border-right: 1px solid #e5e5e5;
+            overflow-y: auto;
+            padding: 20px 16px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 2px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #a3a3a3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 4px;
+            margin-bottom: 12px;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+        }
+
+        .category-item:hover {
+            background: #f5f5f5;
+        }
+
+        .category-item.selected {
+            background: #f5f3ff;
+        }
+
+        .category-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .category-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: #404040;
+        }
+
+        .category-count {
+            font-size: 12px;
+            color: #a3a3a3;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Graph container */
+        .graph-container {
+            flex: 1;
+            position: relative;
+            background: #fafafa;
+        }
+
+        #knowledge-graph {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Detail panel */
+        .detail-panel {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 320px;
+            max-height: calc(100% - 40px);
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+            animation: slideIn 0.2s ease;
+            z-index: 50;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .detail-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detail-icon {
+            width: 48px;
+            height: 48px;
+            background: #f5f3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .close-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: #a3a3a3;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 18px;
+            transition: all 0.15s;
+        }
+
+        .close-btn:hover {
+            background: #f5f5f5;
+            color: #525252;
+        }
+
+        .detail-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-top: 12px;
+        }
+
+        .detail-type {
+            font-size: 12px;
+            color: #a3a3a3;
+            margin-top: 4px;
+        }
+
+        .detail-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 250px);
+        }
+
+        .detail-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detail-body::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 2px;
+        }
+
+        .detail-desc {
+            font-size: 13px;
+            color: #525252;
+            line-height: 1.6;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #7c3aed;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #a3a3a3;
+            margin-top: 2px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #a3a3a3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .related-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .related-tag {
+            padding: 5px 10px;
+            background: #f5f5f5;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #525252;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .related-tag:hover {
+            background: #f5f3ff;
+            border-color: #7c3aed;
+            color: #7c3aed;
+        }
+
+        /* Bottom stats */
+        .bottom-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 32px;
+            background: #fff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .bottom-stat {
+            text-align: center;
+        }
+
+        .bottom-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bottom-stat-label {
+            font-size: 11px;
+            color: #a3a3a3;
+            margin-top: 1px;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #a3a3a3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #525252;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-square {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #a3a3a3;
+            display: none;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">AI</div>
+                <div>
+                    <div class="header-title">知识图谱</div>
+                    <div class="header-subtitle">人工智能训练师三级 · 1593道真题</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索知识点...">
+                </div>
+                <button class="btn" id="btnReset">重置</button>
+                <button class="btn" id="btnLayout">切换布局</button>
+            </div>
+        </header>
+
+        <div class="main">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-title">知识领域</div>
+            </aside>
+
+            <div class="graph-container">
+                <div id="knowledge-graph"></div>
+
+                <div class="detail-panel" id="detailPanel">
+                    <div class="detail-header">
+                        <div class="detail-icon" id="detailIcon"></div>
+                        <button class="close-btn" id="closeDetail">×</button>
+                    </div>
+                    <div class="detail-title" id="detailTitle"></div>
+                    <div class="detail-type" id="detailType"></div>
+                    <div class="detail-body">
+                        <div class="detail-desc" id="detailDesc"></div>
+                        <div class="detail-stats" id="detailStats"></div>
+                        <div id="detailRelated"></div>
+                    </div>
+                </div>
+
+                <div class="bottom-bar">
+                    <div class="bottom-stat">
+                        <div class="bottom-stat-value" id="statNodes">0</div>
+                        <div class="bottom-stat-label">知识点</div>
+                    </div>
+                    <div class="bottom-stat">
+                        <div class="bottom-stat-value" id="statLinks">0</div>
+                        <div class="bottom-stat-label">关联</div>
+                    </div>
+                    <div class="bottom-stat">
+                        <div class="bottom-stat-value">1593</div>
+                        <div class="bottom-stat-label">题目</div>
+                    </div>
+                    <div class="bottom-stat">
+                        <div class="bottom-stat-value">15</div>
+                        <div class="bottom-stat-label">领域</div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-title">图例</div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #7c3aed;"></div>
+                        <span>核心概念</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #2563eb;"></div>
+                        <span>知识领域</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #0891b2;"></div>
+                        <span>知识模块</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #059669;"></div>
+                        <span>知识点</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-square" style="background: #d97706;"></div>
+                        <span>工具/技术</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const knowledgeData = {
+            nodes: [
+                { id: 'core', name: '人工智能训练师三级', symbolSize: 56, category: 0, description: '人工智能训练师三级认证核心知识体系', value: 1593 },
+
+                { id: 'ethics', name: '职业道德与职业守则', symbolSize: 40, category: 1, description: '职业道德规范、职业守则、伦理责任', value: 68 },
+                { id: 'law', name: '法律法规与知识产权', symbolSize: 38, category: 1, description: '劳动法、网络安全法、知识产权保护', value: 60 },
+                { id: 'computer', name: '计算机基础与办公软件', symbolSize: 48, category: 1, description: '操作系统、Office软件、网络基础', value: 189 },
+                { id: 'data_collection', name: '数据采集与处理', symbolSize: 46, category: 1, description: '数据采集、清洗、ETL流程', value: 147 },
+                { id: 'data_storage', name: '数据存储与管理', symbolSize: 30, category: 1, description: '数据库、数据仓库、分布式存储', value: 18 },
+                { id: 'ai_basics', name: '人工智能基础', symbolSize: 54, category: 1, description: '机器学习、深度学习、算法基础', value: 292 },
+                { id: 'data_annotation', name: '数据标注与特征工程', symbolSize: 44, category: 1, description: '数据标注、特征提取、特征选择', value: 127 },
+                { id: 'model_training', name: '模型训练与优化', symbolSize: 34, category: 1, description: '训练策略、超参数调优、正则化', value: 37 },
+                { id: 'model_deploy', name: '模型评估与部署', symbolSize: 36, category: 1, description: '评估指标、部署流程、监控运维', value: 44 },
+                { id: 'smart_app', name: '智能应用与系统', symbolSize: 42, category: 1, description: 'NLP、CV、推荐系统、知识图谱', value: 99 },
+                { id: 'business', name: '业务流程与优化', symbolSize: 44, category: 1, description: '流程分析、数据分析、业务优化', value: 120 },
+                { id: 'hci', name: '人机交互与界面设计', symbolSize: 43, category: 1, description: '交互设计、UI设计、用户体验', value: 107 },
+                { id: 'training', name: '培训与教学', symbolSize: 28, category: 1, description: '教学方法、课程设计、培训讲义', value: 17 },
+                { id: 'visualization', name: '数据可视化与分析工具', symbolSize: 32, category: 1, description: 'Matplotlib、图表设计、数据展示', value: 22 },
+                { id: 'testing', name: '系统测试与性能优化', symbolSize: 24, category: 1, description: '测试方法、性能评估、优化策略', value: 3 },
+
+                { id: 'moral_eval', name: '道德评价', symbolSize: 20, category: 2, description: '道德评价标准和方法', parent: 'ethics' },
+                { id: 'professional_code', name: '职业守则', symbolSize: 20, category: 2, description: '职业守则的制定与执行', parent: 'ethics' },
+                { id: 'dedication', name: '爱岗敬业', symbolSize: 20, category: 2, description: '爱岗敬业的具体表现', parent: 'ethics' },
+                { id: 'integrity', name: '诚实守信', symbolSize: 20, category: 2, description: '诚信的职业要求', parent: 'ethics' },
+
+                { id: 'labor_law', name: '劳动法', symbolSize: 20, category: 2, description: '劳动合同、休息休假、劳动保护', parent: 'law' },
+                { id: 'cybersecurity', name: '网络安全法', symbolSize: 20, category: 2, description: '网络安全保障义务', parent: 'law' },
+                { id: 'ip_protection', name: '知识产权保护', symbolSize: 20, category: 2, description: '专利、著作权、商标保护', parent: 'law' },
+                { id: 'privacy', name: '隐私保护', symbolSize: 20, category: 2, description: '用户隐私保护措施', parent: 'law' },
+
+                { id: 'windows', name: 'Windows系统', symbolSize: 20, category: 2, description: '操作系统基础、系统维护', parent: 'computer' },
+                { id: 'office_suite', name: 'Office办公软件', symbolSize: 20, category: 2, description: 'Word、Excel、PowerPoint', parent: 'computer' },
+                { id: 'browser', name: '浏览器应用', symbolSize: 20, category: 2, description: '浏览器使用、网络浏览', parent: 'computer' },
+                { id: 'network_basics', name: '网络基础', symbolSize: 20, category: 2, description: '计算机网络、TCP/IP、网络安全', parent: 'computer' },
+
+                { id: 'web_scraping', name: '网络爬虫', symbolSize: 20, category: 2, description: '数据抓取、爬虫技术', parent: 'data_collection' },
+                { id: 'etl', name: 'ETL流程', symbolSize: 20, category: 2, description: '数据抽取、转换、加载', parent: 'data_collection' },
+                { id: 'data_cleaning', name: '数据清洗', symbolSize: 20, category: 2, description: '数据质量、异常处理、缺失值', parent: 'data_collection' },
+                { id: 'data_quality', name: '数据质量', symbolSize: 20, category: 2, description: '数据质量监控、评估', parent: 'data_collection' },
+
+                { id: 'database', name: '数据库', symbolSize: 20, category: 2, description: '关系型、非关系型数据库', parent: 'data_storage' },
+                { id: 'cloud_service', name: '云服务', symbolSize: 20, category: 2, description: '云存储、云计算服务', parent: 'data_storage' },
+                { id: 'data_governance', name: '数据治理', symbolSize: 20, category: 2, description: '数据管理、数据安全', parent: 'data_storage' },
+
+                { id: 'ml_basics', name: '机器学习基础', symbolSize: 20, category: 2, description: '监督学习、无监督学习、强化学习', parent: 'ai_basics' },
+                { id: 'deep_learning', name: '深度学习', symbolSize: 20, category: 2, description: '神经网络、CNN、RNN、Transformer', parent: 'ai_basics' },
+                { id: 'algorithms', name: '算法基础', symbolSize: 20, category: 2, description: '分类、聚类、回归算法', parent: 'ai_basics' },
+                { id: 'data_mining', name: '数据挖掘', symbolSize: 20, category: 2, description: '关联规则、异常检测', parent: 'ai_basics' },
+
+                { id: 'annotation_process', name: '标注流程', symbolSize: 20, category: 2, description: '标注方法、标注工具、质量控制', parent: 'data_annotation' },
+                { id: 'feature_eng', name: '特征工程', symbolSize: 20, category: 2, description: '特征提取、特征选择、降维', parent: 'data_annotation' },
+
+                { id: 'training_strategy', name: '训练策略', symbolSize: 20, category: 2, description: '梯度下降、损失函数、优化器', parent: 'model_training' },
+                { id: 'hyperparameter', name: '超参数调优', symbolSize: 20, category: 2, description: '学习率、批次大小、迭代次数', parent: 'model_training' },
+                { id: 'regularization', name: '正则化', symbolSize: 20, category: 2, description: 'L1/L2正则化、Dropout', parent: 'model_training' },
+
+                { id: 'evaluation_metrics', name: '评估指标', symbolSize: 20, category: 2, description: '准确率、召回率、F1、AUC', parent: 'model_deploy' },
+                { id: 'deployment', name: '部署流程', symbolSize: 20, category: 2, description: '模型部署、容器化、微服务', parent: 'model_deploy' },
+                { id: 'monitoring', name: '监控运维', symbolSize: 20, category: 2, description: '性能监控、日志分析', parent: 'model_deploy' },
+
+                { id: 'nlp', name: '自然语言处理', symbolSize: 20, category: 2, description: '文本处理、情感分析、命名实体', parent: 'smart_app' },
+                { id: 'cv', name: '计算机视觉', symbolSize: 20, category: 2, description: '图像分类、目标检测', parent: 'smart_app' },
+                { id: 'recommendation', name: '推荐系统', symbolSize: 20, category: 2, description: '协同过滤、内容推荐', parent: 'smart_app' },
+                { id: 'knowledge_graph', name: '知识图谱', symbolSize: 20, category: 2, description: '知识表示、图数据库', parent: 'smart_app' },
+
+                { id: 'process_analysis', name: '流程分析', symbolSize: 20, category: 2, description: '业务流程分析、瓶颈识别', parent: 'business' },
+                { id: 'process_optimization', name: '流程优化', symbolSize: 20, category: 2, description: '流程再造、效率提升', parent: 'business' },
+                { id: 'data_analysis', name: '数据分析', symbolSize: 20, category: 2, description: '描述性分析、推断性分析', parent: 'business' },
+
+                { id: 'interaction_design', name: '交互设计', symbolSize: 20, category: 2, description: '交互原则、手势设计', parent: 'hci' },
+                { id: 'ui_design', name: 'UI设计', symbolSize: 20, category: 2, description: '界面布局、视觉设计', parent: 'hci' },
+                { id: 'prototype', name: '原型设计', symbolSize: 20, category: 2, description: '低保真、高保真原型', parent: 'hci' },
+                { id: 'user_research', name: '用户研究', symbolSize: 20, category: 2, description: '用户需求、用户测试', parent: 'hci' },
+
+                { id: 'teaching_methods', name: '教学方法', symbolSize: 20, category: 2, description: '讲授法、案例教学、实践教学', parent: 'training' },
+                { id: 'course_design', name: '课程设计', symbolSize: 20, category: 2, description: '培训讲义、课程结构', parent: 'training' },
+
+                { id: 'cnn', name: 'CNN', symbolSize: 14, category: 3, description: '卷积神经网络，用于图像处理', parent: 'deep_learning' },
+                { id: 'rnn', name: 'RNN', symbolSize: 14, category: 3, description: '循环神经网络，用于序列数据', parent: 'deep_learning' },
+                { id: 'transformer', name: 'Transformer', symbolSize: 14, category: 3, description: '注意力机制，NLP核心架构', parent: 'deep_learning' },
+                { id: 'gan', name: 'GAN', symbolSize: 14, category: 3, description: '生成对抗网络，数据生成', parent: 'deep_learning' },
+
+                { id: 'svm', name: 'SVM', symbolSize: 14, category: 3, description: '支持向量机，分类算法', parent: 'algorithms' },
+                { id: 'decision_tree', name: '决策树', symbolSize: 14, category: 3, description: '树形分类模型', parent: 'algorithms' },
+                { id: 'random_forest', name: '随机森林', symbolSize: 14, category: 3, description: '集成学习算法', parent: 'algorithms' },
+                { id: 'kmeans', name: 'K-Means', symbolSize: 14, category: 3, description: '聚类算法', parent: 'algorithms' },
+                { id: 'linear_reg', name: '线性回归', symbolSize: 14, category: 3, description: '回归分析基础', parent: 'algorithms' },
+                { id: 'logistic_reg', name: '逻辑回归', symbolSize: 14, category: 3, description: '分类算法', parent: 'algorithms' },
+
+                { id: 'pca', name: 'PCA', symbolSize: 14, category: 3, description: '主成分分析，降维方法', parent: 'feature_eng' },
+                { id: 'cross_validation', name: '交叉验证', symbolSize: 14, category: 3, description: '模型评估方法', parent: 'evaluation_metrics' },
+                { id: 'gradient_descent', name: '梯度下降', symbolSize: 14, category: 3, description: '优化算法基础', parent: 'training_strategy' },
+                { id: 'loss_function', name: '损失函数', symbolSize: 14, category: 3, description: '模型优化目标', parent: 'training_strategy' },
+                { id: 'dropout', name: 'Dropout', symbolSize: 14, category: 3, description: '正则化技术', parent: 'regularization' },
+                { id: 'overfitting', name: '过拟合', symbolSize: 14, category: 3, description: '模型泛化问题', parent: 'regularization' },
+                { id: 'normalization', name: '数据归一化', symbolSize: 14, category: 3, description: '数据预处理技术', parent: 'data_cleaning' },
+                { id: 'sentiment_analysis', name: '情感分析', symbolSize: 14, category: 3, description: '文本情感判断', parent: 'nlp' },
+                { id: 'object_detection', name: '目标检测', symbolSize: 14, category: 3, description: 'YOLO、R-CNN', parent: 'cv' },
+                { id: 'containerization', name: '容器化', symbolSize: 14, category: 3, description: 'Docker、Kubernetes', parent: 'deployment' },
+                { id: 'funnel_analysis', name: '漏斗分析', symbolSize: 14, category: 3, description: '转化率分析方法', parent: 'process_analysis' },
+
+                { id: 'python', name: 'Python', symbolSize: 16, category: 4, description: '编程语言，AI开发首选', parent: 'computer' },
+                { id: 'tensorflow', name: 'TensorFlow', symbolSize: 16, category: 4, description: '深度学习框架', parent: 'deep_learning' },
+                { id: 'pytorch', name: 'PyTorch', symbolSize: 16, category: 4, description: '深度学习框架', parent: 'deep_learning' },
+                { id: 'pandas_lib', name: 'Pandas', symbolSize: 16, category: 4, description: '数据处理库', parent: 'data_cleaning' },
+                { id: 'matplotlib', name: 'Matplotlib', symbolSize: 16, category: 4, description: '数据可视化库', parent: 'visualization' },
+                { id: 'docker', name: 'Docker', symbolSize: 16, category: 4, description: '容器化平台', parent: 'containerization' },
+                { id: 'mysql', name: 'MySQL', symbolSize: 16, category: 4, description: '关系型数据库', parent: 'database' },
+                { id: 'excel_tool', name: 'Excel', symbolSize: 16, category: 4, description: '数据处理工具', parent: 'office_suite' },
+                { id: 'figma', name: 'Figma', symbolSize: 16, category: 4, description: 'UI设计工具', parent: 'ui_design' },
+            ],
+            links: [
+                { source: 'core', target: 'ethics' },
+                { source: 'core', target: 'law' },
+                { source: 'core', target: 'computer' },
+                { source: 'core', target: 'data_collection' },
+                { source: 'core', target: 'data_storage' },
+                { source: 'core', target: 'ai_basics' },
+                { source: 'core', target: 'data_annotation' },
+                { source: 'core', target: 'model_training' },
+                { source: 'core', target: 'model_deploy' },
+                { source: 'core', target: 'smart_app' },
+                { source: 'core', target: 'business' },
+                { source: 'core', target: 'hci' },
+                { source: 'core', target: 'training' },
+                { source: 'core', target: 'visualization' },
+                { source: 'core', target: 'testing' },
+
+                { source: 'ethics', target: 'moral_eval' },
+                { source: 'ethics', target: 'professional_code' },
+                { source: 'ethics', target: 'dedication' },
+                { source: 'ethics', target: 'integrity' },
+                { source: 'law', target: 'labor_law' },
+                { source: 'law', target: 'cybersecurity' },
+                { source: 'law', target: 'ip_protection' },
+                { source: 'law', target: 'privacy' },
+                { source: 'computer', target: 'windows' },
+                { source: 'computer', target: 'office_suite' },
+                { source: 'computer', target: 'browser' },
+                { source: 'computer', target: 'network_basics' },
+                { source: 'data_collection', target: 'web_scraping' },
+                { source: 'data_collection', target: 'etl' },
+                { source: 'data_collection', target: 'data_cleaning' },
+                { source: 'data_collection', target: 'data_quality' },
+                { source: 'data_storage', target: 'database' },
+                { source: 'data_storage', target: 'cloud_service' },
+                { source: 'data_storage', target: 'data_governance' },
+                { source: 'ai_basics', target: 'ml_basics' },
+                { source: 'ai_basics', target: 'deep_learning' },
+                { source: 'ai_basics', target: 'algorithms' },
+                { source: 'ai_basics', target: 'data_mining' },
+                { source: 'data_annotation', target: 'annotation_process' },
+                { source: 'data_annotation', target: 'feature_eng' },
+                { source: 'model_training', target: 'training_strategy' },
+                { source: 'model_training', target: 'hyperparameter' },
+                { source: 'model_training', target: 'regularization' },
+                { source: 'model_deploy', target: 'evaluation_metrics' },
+                { source: 'model_deploy', target: 'deployment' },
+                { source: 'model_deploy', target: 'monitoring' },
+                { source: 'smart_app', target: 'nlp' },
+                { source: 'smart_app', target: 'cv' },
+                { source: 'smart_app', target: 'recommendation' },
+                { source: 'smart_app', target: 'knowledge_graph' },
+                { source: 'business', target: 'process_analysis' },
+                { source: 'business', target: 'process_optimization' },
+                { source: 'business', target: 'data_analysis' },
+                { source: 'hci', target: 'interaction_design' },
+                { source: 'hci', target: 'ui_design' },
+                { source: 'hci', target: 'prototype' },
+                { source: 'hci', target: 'user_research' },
+                { source: 'training', target: 'teaching_methods' },
+                { source: 'training', target: 'course_design' },
+
+                { source: 'deep_learning', target: 'cnn' },
+                { source: 'deep_learning', target: 'rnn' },
+                { source: 'deep_learning', target: 'transformer' },
+                { source: 'deep_learning', target: 'gan' },
+                { source: 'algorithms', target: 'svm' },
+                { source: 'algorithms', target: 'decision_tree' },
+                { source: 'algorithms', target: 'random_forest' },
+                { source: 'algorithms', target: 'kmeans' },
+                { source: 'algorithms', target: 'linear_reg' },
+                { source: 'algorithms', target: 'logistic_reg' },
+                { source: 'feature_eng', target: 'pca' },
+                { source: 'evaluation_metrics', target: 'cross_validation' },
+                { source: 'training_strategy', target: 'gradient_descent' },
+                { source: 'training_strategy', target: 'loss_function' },
+                { source: 'regularization', target: 'dropout' },
+                { source: 'regularization', target: 'overfitting' },
+                { source: 'data_cleaning', target: 'normalization' },
+                { source: 'nlp', target: 'sentiment_analysis' },
+                { source: 'cv', target: 'object_detection' },
+                { source: 'deployment', target: 'containerization' },
+                { source: 'process_analysis', target: 'funnel_analysis' },
+
+                { source: 'python', target: 'web_scraping', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'python', target: 'data_cleaning', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'python', target: 'ml_basics', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'tensorflow', target: 'deep_learning', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'pytorch', target: 'deep_learning', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'pandas_lib', target: 'data_cleaning', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'matplotlib', target: 'visualization', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'docker', target: 'containerization', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'mysql', target: 'database', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'excel_tool', target: 'data_cleaning', lineStyle: { type: 'dashed', opacity: 0.3 } },
+                { source: 'figma', target: 'ui_design', lineStyle: { type: 'dashed', opacity: 0.3 } },
+            ],
+            categories: [
+                { name: '核心概念' },
+                { name: '知识领域' },
+                { name: '知识模块' },
+                { name: '知识点' },
+                { name: '工具' }
+            ]
+        };
+
+        const categoryColors = ['#7c3aed', '#2563eb', '#0891b2', '#059669', '#d97706'];
+
+        // Initialize chart
+        const chart = echarts.init(document.getElementById('knowledge-graph'));
+
+        let currentLayout = 'force';
+
+        function getOption(layout) {
+            return {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    show: true,
+                    backgroundColor: '#fff',
+                    borderColor: '#e5e5e5',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#111',
+                        fontSize: 13
+                    },
+                    extraCssText: 'box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 8px;',
+                    formatter: function(params) {
+                        if (params.dataType === 'node') {
+                            return `<div style="padding: 4px 0;">
+                                <div style="font-weight: 600;">${params.data.name}</div>
+                                <div style="color: #737373; font-size: 12px; margin-top: 4px;">${params.data.description}</div>
+                                ${params.data.value ? `<div style="color: #7c3aed; margin-top: 6px; font-size: 12px;">${params.data.value} 道题目</div>` : ''}
+                            </div>`;
+                        }
+                        return '';
+                    }
+                },
+                animationDuration: 1000,
+                animationEasingUpdate: 'cubicInOut',
+                series: [{
+                    type: 'graph',
+                    layout: layout,
+                    data: knowledgeData.nodes.map(node => ({
+                        ...node,
+                        itemStyle: {
+                            color: categoryColors[node.category],
+                            borderColor: '#fff',
+                            borderWidth: node.category === 0 ? 3 : 1,
+                            shadowBlur: 0
+                        },
+                        label: {
+                            show: node.symbolSize > 18,
+                            position: 'right',
+                            formatter: '{b}',
+                            fontSize: node.category === 0 ? 13 : (node.category === 1 ? 11 : 10),
+                            color: '#404040',
+                            fontWeight: node.category <= 1 ? 500 : 400
+                        }
+                    })),
+                    links: knowledgeData.links.map(link => ({
+                        ...link,
+                        lineStyle: {
+                            color: link.lineStyle?.type === 'dashed' ? '#d4d4d4' : '#e5e5e5',
+                            width: link.lineStyle?.type === 'dashed' ? 1 : 1.5,
+                            curveness: 0.2,
+                            ...link.lineStyle
+                        }
+                    })),
+                    categories: knowledgeData.categories,
+                    roam: true,
+                    draggable: true,
+                    force: {
+                        repulsion: 250,
+                        gravity: 0.05,
+                        edgeLength: 120,
+                        layoutAnimation: true
+                    },
+                    circular: {
+                        rotateLabel: true
+                    },
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: {
+                            width: 3,
+                            color: '#7c3aed'
+                        },
+                        itemStyle: {
+                            borderColor: '#7c3aed',
+                            borderWidth: 2,
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(124, 58, 237, 0.3)'
+                        },
+                        label: {
+                            fontWeight: 600
+                        }
+                    },
+                    blur: {
+                        itemStyle: {
+                            opacity: 0.15
+                        },
+                        lineStyle: {
+                            opacity: 0.05
+                        },
+                        label: {
+                            opacity: 0.3
+                        }
+                    }
+                }]
+            };
+        }
+
+        chart.setOption(getOption('force'));
+
+        window.addEventListener('resize', () => chart.resize());
+
+        // Node click
+        chart.on('click', function(params) {
+            if (params.dataType === 'node') {
+                showDetail(params.data);
+            }
+        });
+
+        // Detail panel
+        function showDetail(node) {
+            const panel = document.getElementById('detailPanel');
+            const categoryNames = ['核心概念', '知识领域', '知识模块', '知识点', '工具'];
+            const categoryIcons = ['🎯', '📚', '📖', '📝', '🔧'];
+
+            document.getElementById('detailIcon').textContent = categoryIcons[node.category];
+            document.getElementById('detailTitle').textContent = node.name;
+            document.getElementById('detailType').textContent = categoryNames[node.category];
+            document.getElementById('detailDesc').textContent = node.description;
+
+            const connectedCount = knowledgeData.links.filter(l => l.source === node.id || l.target === node.id).length;
+
+            if (node.value) {
+                document.getElementById('detailStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${node.value}</div>
+                        <div class="stat-label">相关题目</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${connectedCount}</div>
+                        <div class="stat-label">关联知识点</div>
+                    </div>
+                `;
+                document.getElementById('detailStats').style.display = 'grid';
+            } else {
+                document.getElementById('detailStats').style.display = 'none';
+            }
+
+            const connectedNodes = getConnectedNodes(node.id);
+            if (connectedNodes.length > 0) {
+                document.getElementById('detailRelated').innerHTML = `
+                    <div class="section-label">关联知识点</div>
+                    <div class="related-list">
+                        ${connectedNodes.map(n => `<span class="related-tag" onclick="focusNode('${n.id}')">${categoryIcons[n.category]} ${n.name}</span>`).join('')}
+                    </div>
+                `;
+            } else {
+                document.getElementById('detailRelated').innerHTML = '';
+            }
+
+            panel.style.display = 'block';
+        }
+
+        function hideDetail() {
+            document.getElementById('detailPanel').style.display = 'none';
+        }
+
+        function getConnectedNodes(nodeId) {
+            const connected = [];
+            knowledgeData.links.forEach(link => {
+                if (link.source === nodeId) {
+                    const node = knowledgeData.nodes.find(n => n.id === link.target);
+                    if (node) connected.push(node);
+                }
+                if (link.target === nodeId) {
+                    const node = knowledgeData.nodes.find(n => n.id === link.source);
+                    if (node) connected.push(node);
+                }
+            });
+            return connected;
+        }
+
+        function focusNode(nodeId) {
+            chart.dispatchAction({
+                type: 'highlight',
+                seriesIndex: 0,
+                dataIndex: knowledgeData.nodes.findIndex(n => n.id === nodeId)
+            });
+            const node = knowledgeData.nodes.find(n => n.id === nodeId);
+            if (node) showDetail(node);
+        }
+
+        // Sidebar
+        function populateSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const categories = knowledgeData.nodes.filter(n => n.category === 1);
+
+            categories.forEach((cat, index) => {
+                const item = document.createElement('div');
+                item.className = 'category-item';
+                item.innerHTML = `
+                    <div class="category-dot" style="background: ${categoryColors[1]};"></div>
+                    <div class="category-name">${cat.name}</div>
+                    <div class="category-count">${cat.value}</div>
+                `;
+                item.onclick = () => {
+                    focusNode(cat.id);
+                    document.querySelectorAll('.category-item').forEach(c => c.classList.remove('selected'));
+                    item.classList.add('selected');
+                };
+                sidebar.appendChild(item);
+            });
+        }
+
+        populateSidebar();
+
+        // Stats
+        document.getElementById('statNodes').textContent = knowledgeData.nodes.length;
+        document.getElementById('statLinks').textContent = knowledgeData.links.length;
+
+        // Controls
+        document.getElementById('btnReset').onclick = () => {
+            chart.dispatchAction({ type: 'restore' });
+            hideDetail();
+        };
+
+        document.getElementById('btnLayout').onclick = function() {
+            currentLayout = currentLayout === 'force' ? 'circular' : 'force';
+            chart.setOption(getOption(currentLayout));
+            this.classList.toggle('active');
+        };
+
+        document.getElementById('closeDetail').onclick = hideDetail;
+
+        // Search
+        document.getElementById('searchInput').oninput = function(e) {
+            const query = e.target.value.toLowerCase();
+            if (!query) {
+                chart.setOption({
+                    series: [{
+                        data: knowledgeData.nodes.map(node => ({
+                            ...node,
+                            itemStyle: {
+                                color: categoryColors[node.category],
+                                borderColor: '#fff',
+                                borderWidth: node.category === 0 ? 3 : 1
+                            }
+                        }))
+                    }]
+                });
+                return;
+            }
+
+            const matched = new Set();
+            knowledgeData.nodes.forEach(node => {
+                if ((node.name + ' ' + node.description).toLowerCase().includes(query)) {
+                    matched.add(node.id);
+                }
+            });
+
+            chart.setOption({
+                series: [{
+                    data: knowledgeData.nodes.map(node => ({
+                        ...node,
+                        itemStyle: {
+                            color: categoryColors[node.category],
+                            borderColor: '#fff',
+                            borderWidth: node.category === 0 ? 3 : 1,
+                            opacity: matched.has(node.id) ? 1 : 0.1
+                        }
+                    }))
+                }]
+            });
+        };
+    </script>
+</body>
+</html>
